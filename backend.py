@@ -189,5 +189,6 @@ def main(readpath, writepath, plotScatter, plotBar, control_number):
     if willExport == True:
         df_export = pd.DataFrame({"sample (cor./norm.)" : namearray, "area" : areaarray, "pct change" : changearray})
         df_export.to_csv(writepath, index = False)
-
-main(readpath, writepath, plotScatter, plotBar, control_number);
+        
+if __name__ == "__main__":
+    main(readpath, writepath, plotScatter, plotBar, control_number);
