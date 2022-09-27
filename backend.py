@@ -15,7 +15,7 @@ def main(readpath, writepath, plotScatter, plotBar, control_number):
         
     # assign file paths/names
     colortext = open('textfiles/colorlist_lear.txt') #alternative: colorlist.txt
-    output = '220513_cbPDMS_laserrots_oven.csv'
+    output_name = '220513_cbPDMS_laserrots_oven.csv'
     willExport = False
 
     # change working directory to folder with CSVs of interest
@@ -38,12 +38,12 @@ def main(readpath, writepath, plotScatter, plotBar, control_number):
     note = ['?', '?', 'more cure = lower signal', 'more cure = same signal (troubleshooting)', 'more cure = lower signal']
         
     # select type of plot to show (true = scatter, false = bar)
-    plotScatter = True
-    plotBar = False
+    plotScatter = False
+    plotBar = True
     plotBox = False
     plotkind = 'line' #line, bar, barh, hist, box, scatter, etc. for plotScatter plot
 
-    # matplot formatting/scaling values
+    # matplot default formatting/scaling values
     xmin = 600
     xmax = 4000
     width = 0.8 # primary bar plot bar width
@@ -53,17 +53,30 @@ def main(readpath, writepath, plotScatter, plotBar, control_number):
     colorlist = colortext.read().split()
     colorlength = len(colorlist)
 
+    # def findskips(csv, n_checkrows):
+        # """finds number of rows at start of csv that contain non-float values to skip (broken by df dtype confusion)"""
+        # df_findskips = pd.read_csv(csv, names = ['wavenumber', 'val'], nrows = n_checkrows)
+        # for row in n_checkrows:
+        #     value = df_findskips['val'][row]
+        #     if type(value) != 'float':
+        #         skips += 1
+        # return skips
+
+    n_skiprows = 2 #findskips(filelist[0], 10)
+
     # prepare dataframes/arrays/variables for loop
-    df_IR_total = pd.read_csv(filelist[0], skiprows = 2, names = ['wavenumber','temp']) # read first CSV in designated folder and write wavenumbers to primer dataframe and an array
+    df_IR_total = pd.read_csv(filelist[0], skiprows = n_skiprows, names = ['wavenumber','temp']) # read first CSV in designated folder and write wavenumbers to primer dataframe and an array
+    
     if df_IR_total['temp'].max() < 20: # check if CSVs are for absorbance or transmittance signals before primer dataframe drops signal column
         isAbs = True
     else:
         isAbs = False
-
+    
     df_IR_total = df_IR_total.drop(['temp'], axis = 1)
+    # df_IR_total.sort_values(by=['wavenumber']) # why is sort not working????
+
     WN_array = np.array(df_IR_total['wavenumber'])
-    df_IR_total.set_index('wavenumber', append = False, inplace = True)
-    df_IR_total_abs = df_IR_total
+    # df_IR_total.set_index('wavenumber', append = False, inplace = True) # why was I setting index to this?
 
     namearray = []
     areaarray = []
@@ -82,34 +95,36 @@ def main(readpath, writepath, plotScatter, plotBar, control_number):
     index_baseline_low = 0
     index_baseline_high = 0
 
+    #DO A NUMPY SORT AND MAKE ALL DF'S INTO NP ARRAYS
     for WN in WN_array:
-        if WN < WN_low[WN_group]:
-            index_low += 1
-        if WN < WN_high[WN_group]:
+        if WN > WN_low[WN_group]:
             index_high += 1
-        if WN < WN_normal_CH_low:
-            index_normal_CH_low += 1
-        if WN < WN_normal_CH_high:
+        if WN > WN_high[WN_group]:
+            index_low += 1
+        if WN > WN_normal_CH_low:
             index_normal_CH_high += 1
-        if WN < WN_baseline_low:
-            index_baseline_low += 1
-        if WN < WN_baseline_high:
+        if WN > WN_normal_CH_high:
+            index_normal_CH_low += 1
+        if WN > WN_baseline_low:
             index_baseline_high += 1
+        if WN > WN_baseline_high:
+            index_baseline_low += 1
 
     # append signal columns from each CSV in directory to the intial dataframe stepwise in a loop
     for file in filelist:     
         columnname = file[0:-4] # extract column name (slicing off '.csv' from filename)
-        df_temp = pd.read_csv(file, skiprows = 2, names = ['wavenumber', columnname]) # temp dataframe with csv
+        df_temp = pd.read_csv(file, skiprows = n_skiprows, names = ['wavenumber', columnname]) # temp dataframe with csv
 
         # transmittance-to-absorbance conversion (on condition that it is not already in absorbance)
         if isAbs == False:
             df_temp[columnname] /= 100
             df_temp[columnname] += 1e-10 #bandaid for 'log of 0' errors
             df_temp[columnname] = np.log10(df_temp[columnname]) * -1
-            
-        # baseline subtraction
+
+        # baseline subtraction (FLAG fix to reorient from this to that if WN CSVs go 4k)
         baseline_temp = df_temp.iloc[index_baseline_low:index_baseline_high][columnname].mean(axis = 0) # baseline correction value to subtract
         df_temp[columnname] -= baseline_temp
+        print(baseline_temp)
 
         # normalization
         normal_temp = df_temp.iloc[index_normal_CH_low:index_normal_CH_high][columnname].mean(axis = 0) # signal value for current csv at normalization index
@@ -129,7 +144,7 @@ def main(readpath, writepath, plotScatter, plotBar, control_number):
             area = simps(abs_array[index_low:index_high], WN_array[index_low:index_high])
             m = (abs_array[index_low] - abs_array[index_high])/(WN_array[index_low] - WN_array[index_high])
             b = abs_array[index_low] - m*WN_array[index_low]
-            baseline_y = np.array(m*WN_array[index_low:index_high] + b)
+            baseline_y = np.array(m * WN_array[index_low:index_high] + b)
             baseline_area = simps(baseline_y, WN_array[index_low:index_high])
             namearray.append(columnname)
             areaarray.append(area - baseline_area)
@@ -172,15 +187,7 @@ def main(readpath, writepath, plotScatter, plotBar, control_number):
         plt.ylabel(y_label)
         plt.xticks(rotation = 45, ha = 'right')
         plt.title("{} integrated over {}-{} cm-1 ({})".format(os.path.basename(os.path.normpath(readpath)), WN_low[WN_group], WN_high[WN_group], groupname[WN_group])) # uses folder name as plot title
-
-    # if plotBox == True:
-    #     boxdata = []
-    #     for first in firstarray:
-    #         boxdata[first] = first
-    #         for 
-
-
-
+    
     # global plot formatting and printing
     plt.legend()
     plt.show()
@@ -189,6 +196,6 @@ def main(readpath, writepath, plotScatter, plotBar, control_number):
     if willExport == True:
         df_export = pd.DataFrame({"sample (cor./norm.)" : namearray, "area" : areaarray, "pct change" : changearray})
         df_export.to_csv(writepath, index = False)
-        
+
 if __name__ == "__main__":
-    main(readpath, writepath, plotScatter, plotBar, control_number);
+    main(readpath, writepath, plotScatter, plotBar, control_number)
