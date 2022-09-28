@@ -4,15 +4,7 @@ import pandas as pd
 import numpy as np
 from scipy.integrate import simps
 import glob, os
-
-def standardize(WN, index_baseline_low, index_baseline_high, index_normal_low, index_normal_high):
-    """baseline subtraction and normalization"""
-    baseline_diff = # average across indices in np.array for baseline
-    WN_standardized -= baseline_diff
-
-    WN_norm = # average across indices in np.array for normal
-    return WN_standardized
-
+import underhood
 
 # READ FILES #
 readpath = r'CSVs\220921_apk_PDMSCompare_uncured-7A30s808nm'
@@ -26,13 +18,30 @@ ax = df_init.plot('cm-1', filename)
 
 df_tot = df_init['cm-1']
 
+
+WN_group = 0
+WN_low = [715, 940, 2290, 2900, 3060]
+WN_high = [830, 1230, 2390, 2970, 3080]
+groupname = ['Si-O-Si (?)', 'Si-O-Si (?)', 'Si-H', 'CH3', 'vinyl']
+note = ['?', '?', 'more cure = lower signal', 'more cure = same signal (troubleshooting)', 'more cure = lower signal']
+
+WN_array = df_tot.to_numpy()
+"""index_baseline_low = underhood.WN_to_index(WN_array, WN_baseline_low)
+index_baseline_high = underhood.WN_to_index(WN_array, WN_baseline_high)
+index_normal_low = underhood.WN_to_index(WN_array, WN_normal_low)
+index_normal_high = underhood.WN_to_index(WN_array, WN_normal_high)"""
+
 for file in filelist:
     filename = file[0:-4]
-    df_add = standardize(pd.read_csv(file, skiprows = 1, header = 0, names = ['cm-1', filename]))
+    df_add = pd.read_csv(file, skiprows = 1, header = 0, names = ['cm-1', filename])
     df_add = df_add.sort_values(by=['cm-1'])
+    WN_raw = df_add[filename].to_numpy()
+    WN_standardized = underhood.Standardize(WN_raw, index_baseline_low, index_baseline_high, index_normal_low, index_normal_high)
     if file != filelist[0]:
         df_add.plot('cm-1', filename, ax = ax)
 
-    df_tot[filename] = df_add[filename]
+    df_tot[filename] = WN_standardized.tolist()
+
+print(WN_standardized)
 
 plt.show()

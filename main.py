@@ -1,7 +1,7 @@
 from tkinter import *
 import tkinter as tk
 from tkinter import filedialog
-import backend
+import spectraHandler
 import pathlib
 
 class MyWindow:
@@ -85,7 +85,7 @@ class MyWindow:
         plotScatter = True
         plotBar = False
         control_number = 5
-        backend.main(self.importDir, self.exportDir, plotScatter, plotBar, control_number)
+        spectraHandler.main(self.importDir, self.exportDir, plotScatter, plotBar, control_number)
 
 window=Tk()
 mywin=MyWindow(window, 20, 150, 25, 100)
