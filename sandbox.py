@@ -73,5 +73,11 @@ df_findskips = pd.read_csv(filelist[0], names = ['wavenumber', 'val'], nrows = 1
 # index = df_findskips.iloc[n]
 # print(index.dtype)
 
-df_findskips.sort_values(by=['wavenumber'], ascending = 'false')
-print(df_findskips)
+# df_findskips.sort_values(by='wavenumber')
+# df_findskips.to_numpy()
+
+
+if df_findskips['wavenumber'][0] < df_findskips['wavenumber'][1]:
+    print('ascending')
+else:
+    print('descending')
