@@ -1,8 +1,8 @@
 from tkinter import *
 import tkinter as tk
 from tkinter import filedialog
-import spectraHandler
 import pathlib
+import spectraHandler
 
 class MyWindow:
     def __init__(self, win, x1, x2, n, y1):

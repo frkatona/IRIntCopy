@@ -95,7 +95,7 @@ def main(readpath, writepath, plotScatter, plotBar, control_number):
     index_baseline_low = 0
     index_baseline_high = 0
 
-    #DO A NUMPY SORT AND MAKE ALL DF'S INTO NP ARRAYS
+    #DO A NUMPY SORT AND MAKE ALL DF'S INTO NP ARRAYS, better way with mapping method from index card idea
     for WN in WN_array:
         if WN > WN_low[WN_group]:
             index_high += 1
@@ -143,7 +143,7 @@ def main(readpath, writepath, plotScatter, plotBar, control_number):
             abs_array = np.array(df_temp[columnname])
             area = simps(abs_array[index_low:index_high], WN_array[index_low:index_high])
             m = (abs_array[index_low] - abs_array[index_high])/(WN_array[index_low] - WN_array[index_high])
-            b = abs_array[index_low] - m*WN_array[index_low]
+            b = abs_array[index_low] - m * WN_array[index_low]
             baseline_y = np.array(m * WN_array[index_low:index_high] + b)
             baseline_area = simps(baseline_y, WN_array[index_low:index_high])
             namearray.append(columnname)
