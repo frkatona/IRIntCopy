@@ -4,198 +4,59 @@ import pandas as pd
 import numpy as np
 from scipy.integrate import simps
 import glob, os
+import underhood
 
+# READ FILES #
 readpath = r'CSVs\220921_apk_PDMSCompare_uncured-7A30s808nm'
-writepath = r'CSVs\Output'
-plotScatter = True
-plotBar = False
-control_number = 5
+os.chdir(readpath)
+filelist = sorted(glob.glob('*.csv'))
 
-def main(readpath, writepath, plotScatter, plotBar, control_number):
-        
-    # assign file paths/names
-    colortext = open('textfiles/colorlist_lear.txt') #alternative: colorlist.txt
-    output_name = '220513_cbPDMS_laserrots_oven.csv'
-    willExport = False
+# INITIALIZE FILES AND VARIABLES #
+columnname = filelist[0][0:-4]
+df_tot = pd.read_csv(filelist[0], skiprows = 2, header = None, names = ['cm-1', columnname])
+df_tot = df_tot.sort_values(by=['cm-1'], ignore_index = True)
 
-    # change working directory to folder with CSVs of interest
-    os.chdir(readpath) 
+# normalization and baseline correction wavenumbers
+WN_normal_low = 2957
+WN_normal_high = 2967
+WN_baseline_low = 3400
+WN_baseline_high = 3600
 
-    # make list of names of csvs from readpath directory 
-    filelist = sorted(glob.glob('*.csv'))  
+# functional group bounds
+WN_group = 0
+WN_low = [715, 940, 2290, 2900, 3060]
+WN_high = [830, 1230, 2390, 2970, 3080]
+groupname = ['Si-O-Si (1?)', 'Si-O-Si (2?)', 'Si-H', 'CH3', 'vinyl']
+note = ['?', '?', 'more cure = lower signal', 'more cure = same signal (troubleshooting)', 'more cure = lower signal']
 
-    # normalization and baseline correction wavenumbers
-    WN_normal_CH_low = 2957
-    WN_normal_CH_high = 2967
-    WN_baseline_low = 3400 
-    WN_baseline_high = 3600
+df_area = pd.DataFrame({'Areas': [groupname[0], groupname[1], groupname[2], groupname[3], groupname[4]]})
 
-    # choose wavenumber range of interest (to integrate over for bar graph)
-    WN_group = 0
-    WN_low = [715, 940, 2290, 2900, 3060]
-    WN_high = [830, 1230, 2390, 2970, 3080]
-    groupname = ['Si-O-Si (?)', 'Si-O-Si (?)', 'Si-H', 'CH3', 'vinyl']
-    note = ['?', '?', 'more cure = lower signal', 'more cure = same signal (troubleshooting)', 'more cure = lower signal']
-        
-    # select type of plot to show (true = scatter, false = bar)
-    plotScatter = False
-    plotBar = True
-    plotBox = False
-    plotkind = 'line' #line, bar, barh, hist, box, scatter, etc. for plotScatter plot
+# IR WN -> index position conversion
+WN_array = df_tot['cm-1'].to_numpy()
+index_baseline_low = underhood.WN_to_index(WN_array, WN_baseline_low) # later: can do these right in the module when invokding Standardize b/c it's in same place
+index_baseline_high = underhood.WN_to_index(WN_array, WN_baseline_high)
+index_normal_low = underhood.WN_to_index(WN_array, WN_normal_low)
+index_normal_high = underhood.WN_to_index(WN_array, WN_normal_high)
 
-    # matplot default formatting/scaling values
-    xmin = 600
-    xmax = 4000
-    width = 0.8 # primary bar plot bar width
-    lwidth = 2
-
-    # assign colors for differentiating overlapping spectra in scatterplots (currently cycles across custom contrast gradient)
-    colorlist = colortext.read().split()
-    colorlength = len(colorlist)
-
-    # def findskips(csv, n_checkrows):
-        # """finds number of rows at start of csv that contain non-float values to skip (broken by df dtype confusion)"""
-        # df_findskips = pd.read_csv(csv, names = ['wavenumber', 'val'], nrows = n_checkrows)
-        # for row in n_checkrows:
-        #     value = df_findskips['val'][row]
-        #     if type(value) != 'float':
-        #         skips += 1
-        # return skips
-
-    n_skiprows = 2 #findskips(filelist[0], 10)
-
-    # prepare dataframes/arrays/variables for loop
-    df_IR_total = pd.read_csv(filelist[0], skiprows = n_skiprows, names = ['wavenumber','temp']) # read first CSV in designated folder and write wavenumbers to primer dataframe and an array
+for file in filelist:
+    columnname = file[0:-4]
+    df_add = pd.read_csv(file, skiprows = 2, header = None, names = ['cm-1', columnname])
+    df_add = df_add.sort_values(by=['cm-1'], ignore_index = True)
+    WN_raw = df_add[columnname].to_numpy()
+    WN_standardized = underhood.Standardize(WN_raw, index_baseline_low, index_baseline_high, index_normal_low, index_normal_high)
     
-    if df_IR_total['temp'].max() < 20: # check if CSVs are for absorbance or transmittance signals before primer dataframe drops signal column
-        isAbs = True
+    df_tot[columnname] = WN_standardized
+    df_area[columnname] = underhood.PeakIntegration(WN_standardized, WN_array, WN_low, WN_high)
+
+    if file == filelist[0]:
+        ax_raw = df_add.plot('cm-1', columnname, title = 'Raw Spectra')
+        ax_stand = df_tot.plot('cm-1', columnname, title = 'Corrected Spectra')
     else:
-        isAbs = False
-    
-    df_IR_total = df_IR_total.drop(['temp'], axis = 1)
-    # df_IR_total.sort_values(by=['wavenumber']) # why is sort not working????
+        df_add.plot('cm-1', columnname, ax = ax_raw)
+        df_tot.plot('cm-1', columnname, ax = ax_stand)
 
-    WN_array = np.array(df_IR_total['wavenumber'])
-    # df_IR_total.set_index('wavenumber', append = False, inplace = True) # why was I setting index to this?
+df_area.set_index('Areas')
+ax_area = df_area.plot.bar(title = 'Peak Areas')
 
-    namearray = []
-    areaarray = []
-    changearray = []
-    firstarray = []
-    listcount = 0
-    area_control = 0
-    colorcount = colorlength # starts at max value for modulo loop count
-    ax = plt.gca() # define constant axis for iterable additions
-
-    # find indices that correspond to integration bounding and normalization wavenumbers so they can be referenced directly
-    index_low = 0
-    index_high = 0
-    index_normal_CH_low = 0
-    index_normal_CH_high = 0
-    index_baseline_low = 0
-    index_baseline_high = 0
-
-    #DO A NUMPY SORT AND MAKE ALL DF'S INTO NP ARRAYS, better way with mapping method from index card idea
-    for WN in WN_array:
-        if WN > WN_low[WN_group]:
-            index_high += 1
-        if WN > WN_high[WN_group]:
-            index_low += 1
-        if WN > WN_normal_CH_low:
-            index_normal_CH_high += 1
-        if WN > WN_normal_CH_high:
-            index_normal_CH_low += 1
-        if WN > WN_baseline_low:
-            index_baseline_high += 1
-        if WN > WN_baseline_high:
-            index_baseline_low += 1
-
-    # append signal columns from each CSV in directory to the intial dataframe stepwise in a loop
-    for file in filelist:     
-        columnname = file[0:-4] # extract column name (slicing off '.csv' from filename)
-        df_temp = pd.read_csv(file, skiprows = n_skiprows, names = ['wavenumber', columnname]) # temp dataframe with csv
-
-        # transmittance-to-absorbance conversion (on condition that it is not already in absorbance)
-        if isAbs == False:
-            df_temp[columnname] /= 100
-            df_temp[columnname] += 1e-10 #bandaid for 'log of 0' errors
-            df_temp[columnname] = np.log10(df_temp[columnname]) * -1
-
-        # baseline subtraction (FLAG fix to reorient from this to that if WN CSVs go 4k)
-        baseline_temp = df_temp.iloc[index_baseline_low:index_baseline_high][columnname].mean(axis = 0) # baseline correction value to subtract
-        df_temp[columnname] -= baseline_temp
-        print(baseline_temp)
-
-        # normalization
-        normal_temp = df_temp.iloc[index_normal_CH_low:index_normal_CH_high][columnname].mean(axis = 0) # signal value for current csv at normalization index
-        df_temp[columnname] /= normal_temp 
-        
-        # add current signals column to total dataframe
-        df_IR_total = pd.concat([df_IR_total, df_temp[columnname]], axis = 1)
-        
-        # superimpose corrected IR data with cycling color to existing axis for scatterplot
-        if plotScatter == True:
-            df_temp.plot(kind = plotkind, x = 'wavenumber', y = columnname, linewidth = lwidth, c = colorlist[colorcount % colorlength], label = columnname, ax = ax) # old: s = plotSize, c = colorlist[colorcount % colorlength]
-        colorcount += 1 # out of conditional because also serves as loop counter below
-        
-        # peak integration, baseline subtraction, and array collection of values for bar graph (ty Nate and Sarah)
-        if plotBar == True:
-            abs_array = np.array(df_temp[columnname])
-            area = simps(abs_array[index_low:index_high], WN_array[index_low:index_high])
-            m = (abs_array[index_low] - abs_array[index_high])/(WN_array[index_low] - WN_array[index_high])
-            b = abs_array[index_low] - m * WN_array[index_low]
-            baseline_y = np.array(m * WN_array[index_low:index_high] + b)
-            baseline_area = simps(baseline_y, WN_array[index_low:index_high])
-            namearray.append(columnname)
-            areaarray.append(area - baseline_area)
-
-            # find % change values to populate second bar graph (starting with checking if first time through loop for control value)
-            if colorcount <= colorlength + control_number:
-                area_control += (area - baseline_area)
-                changearray.append(0)
-            else:
-                pctchange = 100 * ((area - baseline_area) - area_control)/area_control
-                changearray.append(pctchange)
-            
-            # turn the area_control value from a sum into an average by dividing by # of elements
-            if colorcount == colorlength + control_number:
-                area_control /= control_number
-
-        # stores startpoints for repeat trials
-        if plotBox == True:
-            listcount += 1
-            if columnname[0:2] == '01':
-                firstarray.append(listcount)
-
-    # create scatterplot
-    if plotScatter == True:
-        plt.xlim((xmin, xmax))
-        x_label = ('wavenumbers /cm-1')
-        plt.xlabel(x_label)
-        y_label = 'absorbance (normalized)'
-        plt.ylabel(y_label)
-        plt.title("{} IR spectra from {}-{} cm-1".format(os.path.basename(os.path.normpath(readpath)), xmin, xmax)) # uses folder name as plot title
-
-    #df_IR_total.plot(kind = plotkind, y = df_IR_total.columns, colormap = 'tab20') # old: y = columnname, s = plotSize, c = colorlist[colorcount % colorlength]
-
-    # create bar graph
-    if plotBar == True:
-        print(changearray)
-        plt.bar(namearray, areaarray, width = width, color = 'b', label = 'Integrated Signals')
-        plt.bar(namearray, changearray, width = 0.5 * width, color = 'r', alpha = 0.8, label = 'percent change')
-        y_label = 'integrated signal' #('integrated signal from {WN_low} cm-1 to {WN_high} cm-1')
-        plt.ylabel(y_label)
-        plt.xticks(rotation = 45, ha = 'right')
-        plt.title("{} integrated over {}-{} cm-1 ({})".format(os.path.basename(os.path.normpath(readpath)), WN_low[WN_group], WN_high[WN_group], groupname[WN_group])) # uses folder name as plot title
-    
-    # global plot formatting and printing
-    plt.legend()
-    plt.show()
-
-    # export (arrays to DF to CSV)
-    if willExport == True:
-        df_export = pd.DataFrame({"sample (cor./norm.)" : namearray, "area" : areaarray, "pct change" : changearray})
-        df_export.to_csv(writepath, index = False)
-
-if __name__ == "__main__":
-    main(readpath, writepath, plotScatter, plotBar, control_number)
+plt.show() # enable spectra plot
+# df_tot.to_csv(r'C:\Users\taekw\Desktop\1_PythonScripts\IRPeakExtract\CSVs\Output\df_tot_export.csv') # enable export

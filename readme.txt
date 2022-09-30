@@ -15,9 +15,7 @@ To-do
         - have bar labels end on tick instead of middle on tick
 
 [General Readability/Usability/Efficiency]
-    - rewrite abs conversion and peak integration as methods
-    - exclude lowest WNs that always message up the y scaling
-    - drag/drop GUI (input file directory, graphs, wavenumber bounds, checkbox for included plot types and export) and web implementation'
+    - GUI (input file directory, graphs, wavenumber bounds, checkbox for included plot types and export) and web implementation'
         - directory fields (1: CSV folder, 2: output folder)
         - number field: controls to average over
         - checkboxes: Graphs (1: line, 2: bar), Bands (if bar selection, select all wanted to create)
