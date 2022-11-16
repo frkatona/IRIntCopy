@@ -29,3 +29,21 @@ def PeakIntegration(WN_standardized, WN_array, WN_low, WN_high):
         baseline_area = simps(baseline_y, WN_array[index_low:index_high])
         areaarray.append(area - baseline_area)
     return areaarray
+
+# def PercentChange():
+    # df_change = pd.DataFrame()
+
+    # print(df_area.iloc[2][5:10])
+
+    # for index in range(5):
+    #     df_change(ignore_index = True)['test1', index] = df_area.iloc[index][0:5]
+    #     df_change(ignore_index = True)['test2', index] = df_area.iloc[index][5:10]
+
+    # print(df_change)
+
+    # ax_area = df_area.iloc[0].plot.box(title = 'Box Plot')
+
+    # for n in range(5):
+    #     ave1 = df_area[n][0:5]
+    #     ave2 = df_area[n][5:10]
+    #     print('line {}, control: {}, laser: {}'.format(n, ave1, ave2))

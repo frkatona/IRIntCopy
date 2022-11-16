@@ -1,4 +1,6 @@
-This python script reads all IR Data CSVs in a folder from a given path, normalizes/baseline-corrects them, and plots them, either as superposed scatterplots or bar graphs for a peak area within each spectrum
+This python script reads all IR Data CSVs in a folder from a given path, normalizes/baseline-corrects them, and plots them as superposed scatterplots and bar graphs for a peak area within each spectrum
+
+For now, run from the spectraHandler script
 
 Resources:
  - J Hofman's 2016 "IR Spectroscopic Method for Determiation of Silicone Cross-Linking"
@@ -6,9 +8,6 @@ Resources:
 
 To-do
 [General Graphing]
-    - Spectra:
-        - better color system (auto assign from cmap, call on local .txt, cluster into Hues for trial and move between saturation within trials, etc.)
-            - clever way to group the separate categories? then call on like 'blues.txt, reds.txt, etc.' for hues within that category?
     - Bar Graph
         - use averages and graph bars with standard error/dev first (how to procedurally take arbitrary number of values to average)
         - in integration bar graph: procedurally color bars for each set to separate without label names
