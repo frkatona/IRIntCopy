@@ -3,10 +3,14 @@ This python script reads all IR Data CSVs in a folder from a given path, normali
 For now, run from the spectraHandler script
 
 Resources:
+ - https://www.gelest.com/wp-content/uploads/5000A_Section1_InfraredAnalysis.pdf
  - J Hofman's 2016 "IR Spectroscopic Method for Determiation of Silicone Cross-Linking"
  - Joseph Fortenbaugh's 2019 PSU Doctoral Thesis
 
 To-do
+
+vert bars at band cutoffs
+
 [General Graphing]
     - Bar Graph
         - use averages and graph bars with standard error/dev first (how to procedurally take arbitrary number of values to average)

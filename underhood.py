@@ -7,7 +7,13 @@ def WN_to_index(WN_array, WN):
     return difference_array.argmin()
 
 def Standardize(WN_raw, index_baseline_low, index_baseline_high, index_normal_low, index_normal_high):
-    """baseline subtraction and normalization"""
+    """trans-> abs, baseline subtraction, and normalization"""
+    # transmittance-to-absorbance conversion (on condition that it is not already in absorbance)
+    if WN_raw.max() > 80: # check if CSVs are transmittance signals
+        WN_raw /= 100
+        WN_raw += 1e-10 #bandaid for 'log of 0' errors
+        WN_raw = np.log10(WN_raw) * -1
+
     baseline_diff = WN_raw[index_baseline_low:index_baseline_high].mean() # average across indices in np.array for baseline
     WN_standardized = WN_raw - baseline_diff
 
@@ -19,7 +25,7 @@ def Standardize(WN_raw, index_baseline_low, index_baseline_high, index_normal_lo
 def PeakIntegration(WN_standardized, WN_array, WN_low, WN_high):
     """integrate peaks from input absorbance array (pre-corrected) according to input WN bounds (include a WN array to translate WN bounds to indices)"""
     areaarray = []
-    for group in range(5):
+    for group in range(6):
         index_low = WN_to_index(WN_array, WN_low[group])
         index_high = WN_to_index(WN_array, WN_high[group])
         area = simps(WN_standardized[index_low:index_high], WN_array[index_low:index_high])

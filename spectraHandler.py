@@ -6,7 +6,7 @@ import glob, os
 import underhood
 
 # READ FILES #
-readpath = r'CSVs\221013_KClsalttoptrials'
+readpath = r'CSVs\221202_10A_808nm_5e-3vs0cb'
 os.chdir(readpath)
 filelist = sorted(glob.glob('*.csv'))
 
@@ -23,9 +23,9 @@ WN_baseline_high = 3600
 
 # functional group bounds
 WN_group = 0
-WN_low = [715, 940, 2290, 2900, 3060]
-WN_high = [830, 1230, 2390, 2970, 3080]
-groupname = ['Si-O-Si (1?)', 'Si-O-Si (2?)', 'Si-H', 'CH3', 'vinyl']
+WN_low = [715, 1000, 800, 2080, 2900, 3060] #940-1230 -> 1000-1130
+WN_high = [830, 1130, 950, 2280, 2970, 3080]
+groupname = ['Si-O-Si (1?)', 'Si-O-Si (2?)', 'Si-H (1)', 'Si-H (2)', 'CH3', 'vinyl']
 note = ['?', '?', 'more cure = lower signal', 'more cure = same signal (troubleshooting)', 'more cure = lower signal']
 
 # df_area = pd.DataFrame({'Areas': [groupname[0], groupname[1], groupname[2], groupname[3], groupname[4]]})
@@ -33,7 +33,7 @@ df_area = pd.DataFrame(index = groupname)
 
 # IR WN -> index position conversion
 WN_array = df_tot['cm-1'].to_numpy()
-index_baseline_low = underhood.WN_to_index(WN_array, WN_baseline_low) # later: can do these right in the module when invokding Standardize b/c it's in same place
+index_baseline_low = underhood.WN_to_index(WN_array, WN_baseline_low) # later: can do these right in the module when invoking Standardize b/c it's in same place
 index_baseline_high = underhood.WN_to_index(WN_array, WN_baseline_high)
 index_normal_low = underhood.WN_to_index(WN_array, WN_normal_low)
 index_normal_high = underhood.WN_to_index(WN_array, WN_normal_high)
