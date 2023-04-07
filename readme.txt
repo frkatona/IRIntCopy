@@ -9,7 +9,8 @@ Resources:
 
 To-do
 
-vert bars at band cutoffs
+ - find best cutoffs for bands iteratively and finding the highest correlation with cure time
+ - spectrum cleanup: add vertical bars at band cutoffs
 
 [General Graphing]
     - Bar Graph

@@ -6,7 +6,7 @@ import glob, os
 import underhood
 
 # READ FILES #
-readpath = r'CSVs\221202_10A_808nm_5e-3vs0cb'
+readpath = r'CSVs\230330_cbPDMS_higherpowers'
 os.chdir(readpath)
 filelist = sorted(glob.glob('*.csv'))
 
@@ -23,9 +23,9 @@ WN_baseline_high = 3600
 
 # functional group bounds
 WN_group = 0
-WN_low = [715, 1000, 800, 2080, 2900, 3060] #940-1230 -> 1000-1130
-WN_high = [830, 1130, 950, 2280, 2970, 3080]
-groupname = ['Si-O-Si (1?)', 'Si-O-Si (2?)', 'Si-H (1)', 'Si-H (2)', 'CH3', 'vinyl']
+WN_low = [780, 1000, 800, 2080, 2900, 3060] #940-1230 -> 1000-1130
+WN_high = [810, 1130, 950, 2280, 2970, 3080]
+groupname = ['Si-CH3 (symm)', 'Si-O-Si', 'Si-H (bend)', 'Si-H (stretch)', 'CH3', 'vinyl C-H (stretch)']
 note = ['?', '?', 'more cure = lower signal', 'more cure = same signal (troubleshooting)', 'more cure = lower signal']
 
 # df_area = pd.DataFrame({'Areas': [groupname[0], groupname[1], groupname[2], groupname[3], groupname[4]]})
@@ -38,7 +38,7 @@ index_baseline_high = underhood.WN_to_index(WN_array, WN_baseline_high)
 index_normal_low = underhood.WN_to_index(WN_array, WN_normal_low)
 index_normal_high = underhood.WN_to_index(WN_array, WN_normal_high)
 
-# DATAFRAME ABSORBANCE APPENDING LOOP #
+## CSV -> DF ABSORBANCE EXTRACT/APPEND LOOP ##
 for file in filelist:
     columnname = file[0:-4]
 
@@ -57,12 +57,12 @@ for file in filelist:
         df_add.plot('cm-1', columnname, ax = ax_raw)
         df_tot.plot('cm-1', columnname, ax = ax_stand)
 
-# GRAPHING #
+## GRAPHING ##
 ax_area = df_area.plot.bar(title = 'Peak Areas', rot = 30)
 ax_area_ave = df_area.iloc[0]
 plt.show()
 
 # underhood.PercentChange()
 
-# EXPORT #
-# df_tot.to_csv(r'C:\Users\taekw\Desktop\1_PythonScripts\IRPeakExtract\CSVs\Output\df_tot_export.csv')
+## EXPORT ##
+# df_area.to_csv(r'C:\Users\taekw\Desktop\1_PythonScripts\IRPeakExtract\exports\221206_df_area.csv')

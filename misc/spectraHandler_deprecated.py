@@ -5,7 +5,7 @@ import numpy as np
 from scipy.integrate import simps
 import glob, os
 
-readpath = r'CSVs\220921_apk_PDMSCompare_uncured-7A30s808nm'
+readpath = r'CSVs\230330_cbPDMS_higherpowers'
 writepath = r'CSVs\Output'
 plotScatter = True
 plotBar = False
@@ -31,7 +31,7 @@ def main(readpath, writepath, plotScatter, plotBar, control_number):
     WN_baseline_high = 3600
 
     # choose wavenumber range of interest (to integrate over for bar graph)
-    WN_group = 0
+    WN_group = 2
     WN_low = [715, 940, 2290, 2900, 3060]
     WN_high = [830, 1230, 2390, 2970, 3080]
     groupname = ['Si-O-Si (?)', 'Si-O-Si (?)', 'Si-H', 'CH3', 'vinyl']
@@ -95,7 +95,7 @@ def main(readpath, writepath, plotScatter, plotBar, control_number):
     index_baseline_low = 0
     index_baseline_high = 0
 
-    #DO A NUMPY SORT AND MAKE ALL DF'S INTO NP ARRAYS, better way with mapping method from index card idea
+    # DO A NUMPY SORT AND MAKE ALL DF'S INTO NP ARRAYS, better way with mapping method from index card idea
     for WN in WN_array:
         if WN > WN_low[WN_group]:
             index_high += 1

@@ -9,7 +9,7 @@ def WN_to_index(WN_array, WN):
 def Standardize(WN_raw, index_baseline_low, index_baseline_high, index_normal_low, index_normal_high):
     """trans-> abs, baseline subtraction, and normalization"""
     # transmittance-to-absorbance conversion (on condition that it is not already in absorbance)
-    if WN_raw.max() > 80: # check if CSVs are transmittance signals
+    if WN_raw.max() > 60: # check if CSVs are transmittance signals
         WN_raw /= 100
         WN_raw += 1e-10 #bandaid for 'log of 0' errors
         WN_raw = np.log10(WN_raw) * -1
