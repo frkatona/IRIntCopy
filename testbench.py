@@ -35,9 +35,18 @@ def PeakIntegration(WN_standardized, WN_array, WN_low, WN_high):
         areaarray.append(area - baseline_area)
     return areaarray
 
-readpath = r'CSVs/oven_5ppt-vs-0ppt'
+readpath = r'CSVs/190606_AuNP_PDMS_1'
 os.chdir(readpath)
 filelist = sorted(glob.glob('*.csv'))
+
+# Identify all unique conditions in the filelist
+conditions = set(file.split("_", 1)[1][:-4] for file in filelist)
+num_conditions = len(conditions)
+
+# Map each condition to a unique color map
+colormap_dict = {condition: plt.cm.get_cmap(cmap_name)
+                 for condition, cmap_name in zip(conditions, plt.colormaps()[:num_conditions])}
+
 
 columnname = filelist[0].split("_", 1)[1][:-4]
 df_tot = pd.read_csv(filelist[0], skiprows = 2, header = None, names = ['cm-1', columnname])
@@ -67,14 +76,15 @@ fig_stand, ax_stand = plt.subplots()
 color_list = []
 cubehelix_palette = plt.cm.plasma(np.linspace(0, 1, len(WN_low)))
 
-# Define x arrays for each scatter plot
-x_si_h_stretch_0cb = []
-x_si_h_stretch_5e3 = []
+# Parse the condition name from the filename
+condition_names = [file.split("_", 1)[0] for file in filelist]
 
-y_si_h_stretch_0cb = []
-y_si_h_stretch_5e3 = []
+# Define dictionaries to store colors and data for each condition
+condition_colors = {condition: plt.cm.jet(i / num_samples) for i, condition in enumerate(set(condition_names))}
+condition_data = {condition: {"x": [], "y": []} for condition in condition_names}
 
 for i, file in enumerate(filelist):
+    condition = file.split("_", 1)[0]
     columnname = file.split("_", 1)[1][:-4]
 
     df_add = pd.read_csv(file, skiprows=2, header=None, names=['cm-1', columnname])
@@ -86,14 +96,9 @@ for i, file in enumerate(filelist):
     area = PeakIntegration(WN_standardized, WN_array, WN_low, WN_high)
     df_area[columnname] = area
 
-    if "5e-3" in file:
-        color = plt.cm.jet(i/num_samples)
-        y_si_h_stretch_5e3.append(area[3])  # Si-H (stretch) index is 3
-        x_si_h_stretch_5e3.append(i)  # x values for scatter plot
-    else:
-        color = plt.cm.viridis(i/num_samples)
-        y_si_h_stretch_0cb.append(area[3])  # Si-H (stretch) index is 3
-        x_si_h_stretch_0cb.append(i)  # x values for scatter plot
+    color = condition_colors[condition]
+    condition_data[condition]["x"].append(i)
+    condition_data[condition]["y"].append(area[3])
 
     color_list.append(color)
     
@@ -110,28 +115,30 @@ ax_stand.set_title('Corrected Spectra')
 ax_area = df_area.plot.bar(title='Peak Areas', rot=30, color=color_list)
 
 fig_scatter, ax_scatter = plt.subplots()
-ax_scatter.scatter(x_si_h_stretch_0cb, y_si_h_stretch_0cb, color=plt.cm.viridis(np.linspace(0, 1, len(y_si_h_stretch_0cb))))
-ax_scatter.scatter(x_si_h_stretch_5e3, y_si_h_stretch_5e3, color=plt.cm.jet(np.linspace(0, 1, len(y_si_h_stretch_5e3))))
+
+for condition, data in condition_data.items():
+    color = condition_colors[condition]
+    ax_scatter.scatter(data["x"], data["y"], color=color)
+
 ax_scatter.set_title('Si-H Stretch Area')
 
 # Apply logarithmic fits and plot them
+for condition, data in condition_data.items():
+    # Exclude zero-valued data points to avoid -inf
+    x_log_fit = [x for x, y in zip(data["x"], data["y"]) if y != 0]
+    y_log_fit = [y for y in data["y"] if y != 0]
 
-# Exclude zero-valued data points to avoid -inf
-x_si_h_stretch_0cb_log_fit = [x for x, y in zip(x_si_h_stretch_0cb, y_si_h_stretch_0cb) if y != 0]
-y_si_h_stretch_0cb_log_fit = [y for y in y_si_h_stretch_0cb if y != 0]
+    # # Fit a log curve to the data
+    # try:
+    #     coefficients = np.polyfit(x_log_fit, np.log10(y_log_fit), 1)
+    # except np.linalg.LinAlgError:
+    #     print("Error fitting the data:")
+    #     print("x_log_fit:", x_log_fit)
+    #     print("y_log_fit:", y_log_fit)
+    #     raise
 
-x_si_h_stretch_5e3_log_fit = [x for x, y in zip(x_si_h_stretch_5e3, y_si_h_stretch_5e3) if y != 0]
-y_si_h_stretch_5e3_log_fit = [y for y in y_si_h_stretch_5e3 if y != 0]
-
-# Fit a log curve to the data
-coefficients_0cb = np.polyfit(x_si_h_stretch_0cb_log_fit, np.log10(y_si_h_stretch_0cb_log_fit), 1)
-polynomial_0cb = np.poly1d(coefficients_0cb)
-y_fit_0cb = 10**polynomial_0cb(x_si_h_stretch_0cb_log_fit)
-ax_scatter.plot(x_si_h_stretch_0cb_log_fit, y_fit_0cb, color="green")
-
-coefficients_5e3 = np.polyfit(x_si_h_stretch_5e3_log_fit, np.log10(y_si_h_stretch_5e3_log_fit), 1)
-polynomial_5e3 = np.poly1d(coefficients_5e3)
-y_fit_5e3 = 10**polynomial_5e3(x_si_h_stretch_5e3_log_fit)
-ax_scatter.plot(x_si_h_stretch_5e3_log_fit, y_fit_5e3, color="red")
+    # polynomial = np.poly1d(coefficients)
+    # y_fit = 10**polynomial(x_log_fit)
+    # ax_scatter.plot(x_log_fit, y_fit)
 
 plt.show()
