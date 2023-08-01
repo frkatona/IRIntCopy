@@ -35,7 +35,7 @@ def PeakIntegration(WN_standardized, WN_array, WN_low, WN_high):
         areaarray.append(area - baseline_area)
     return areaarray
 
-readpath = r'CSVs/190606_AuNP_PDMS_1'
+readpath = r'CSVs/210421_AuPDMS'
 os.chdir(readpath)
 filelist = sorted(glob.glob('*.csv'))
 
