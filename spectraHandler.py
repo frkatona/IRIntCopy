@@ -35,7 +35,7 @@ def PeakIntegration(WN_standardized, WN_array, WN_low, WN_high):
         areaarray.append(area - baseline_area)
     return areaarray
 
-readpath = r'CSVs/oven_5ppt-vs-0ppt'
+readpath = r'CSVs\10A_5ppt-vs-0-vs-time'
 os.chdir(readpath)
 filelist = sorted(glob.glob('*.csv'))
 

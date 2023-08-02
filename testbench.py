@@ -2,7 +2,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import glob, os
+import re
 from scipy.integrate import simps
+from numpy import log10
 
 def WN_to_index(WN_array, WN):
     difference_array = np.absolute(WN_array - WN)
@@ -35,22 +37,12 @@ def PeakIntegration(WN_standardized, WN_array, WN_low, WN_high):
         areaarray.append(area - baseline_area)
     return areaarray
 
-readpath = r'CSVs/210421_AuPDMS'
+readpath = r"CSVs\10A_5ppt-vs-0-vs-time"
 os.chdir(readpath)
 filelist = sorted(glob.glob('*.csv'))
 
-# Identify all unique conditions in the filelist
-conditions = set(file.split("_", 1)[1][:-4] for file in filelist)
-num_conditions = len(conditions)
-
-# Map each condition to a unique color map
-colormap_dict = {condition: plt.cm.get_cmap(cmap_name)
-                 for condition, cmap_name in zip(conditions, plt.colormaps()[:num_conditions])}
-
-
-columnname = filelist[0].split("_", 1)[1][:-4]
-df_tot = pd.read_csv(filelist[0], skiprows = 2, header = None, names = ['cm-1', columnname])
-df_tot = df_tot.sort_values(by=['cm-1'], ignore_index = True)
+df_tot = pd.DataFrame()
+df_tot[0] = pd.read_csv(filelist[0], skiprows=2, header=None)[0]
 
 WN_normal_low, WN_normal_high = 1260, 1263
 WN_baseline_low, WN_baseline_high = 3400, 3600
@@ -62,7 +54,7 @@ groupname = ['Si-CH3', 'Si-H (bend)', 'Si-O-Si', 'Si-H (stretch)', 'CH3', 'vinyl
 
 df_area = pd.DataFrame(index=groupname)
 
-WN_array = df_tot['cm-1'].to_numpy()
+WN_array = df_tot[0].to_numpy()
 index_baseline_low = WN_to_index(WN_array, WN_baseline_low)
 index_baseline_high = WN_to_index(WN_array, WN_baseline_high)
 index_normal_low = WN_to_index(WN_array, WN_normal_low)
@@ -73,22 +65,18 @@ num_samples = len(filelist)
 fig_raw, ax_raw = plt.subplots()
 fig_stand, ax_stand = plt.subplots()
 
-color_list = []
-cubehelix_palette = plt.cm.plasma(np.linspace(0, 1, len(WN_low)))
+# Dictionaries to store x and y values for scatter plot
+scatter_data = {}
 
-# Parse the condition name from the filename
-condition_names = [file.split("_", 1)[0] for file in filelist]
-
-# Define dictionaries to store colors and data for each condition
-condition_colors = {condition: plt.cm.jet(i / num_samples) for i, condition in enumerate(set(condition_names))}
-condition_data = {condition: {"x": [], "y": []} for condition in condition_names}
+fit_equations = {}  # Store the fit equations
 
 for i, file in enumerate(filelist):
-    condition = file.split("_", 1)[0]
-    columnname = file.split("_", 1)[1][:-4]
+    sample_type, time, _ = re.split('_|\.', file)
+    time = int(time)  # Extracted time in seconds
+    columnname = f"{sample_type}_{time}s"  # Include time in seconds in column name
 
-    df_add = pd.read_csv(file, skiprows=2, header=None, names=['cm-1', columnname])
-    df_add = df_add.sort_values(by=['cm-1'], ignore_index=True)
+    df_add = pd.read_csv(file, skiprows=2, header=None, names=[0, columnname])
+    df_add = df_add.sort_values(by=[0], ignore_index=True)
     WN_raw = df_add[columnname].to_numpy()
     WN_standardized = Standardize(WN_raw, index_baseline_low, index_baseline_high, index_normal_low, index_normal_high)
     
@@ -96,49 +84,56 @@ for i, file in enumerate(filelist):
     area = PeakIntegration(WN_standardized, WN_array, WN_low, WN_high)
     df_area[columnname] = area
 
-    color = condition_colors[condition]
-    condition_data[condition]["x"].append(i)
-    condition_data[condition]["y"].append(area[3])
+    color = plt.cm.viridis(i/num_samples)
 
-    color_list.append(color)
-    
-    df_add.plot('cm-1', columnname, ax=ax_raw, color=color)
-    df_tot.plot('cm-1', columnname, ax=ax_stand, color=color)
+    df_add.plot(0, columnname, ax=ax_raw, color=color, label=columnname)
+    df_tot.plot(0, columnname, ax=ax_stand, color=color, label=columnname)
 
-for j in range(len(WN_low)):
-    ax_stand.axvline(x=WN_low[j], color=cubehelix_palette[j], linestyle='--', linewidth=2)
-    ax_stand.axvline(x=WN_high[j], color=cubehelix_palette[j], linestyle='--', linewidth=2)
+    # Append scatter data to appropriate list in dictionary
+    scatter_data.setdefault(sample_type, {"x": [], "y": []})
+    scatter_data[sample_type]["x"].append(time)
+    scatter_data[sample_type]["y"].append(area[3])  # Si-H (stretch) index is 3
 
 ax_raw.set_title('Raw Spectra')
 ax_stand.set_title('Corrected Spectra')
-
-ax_area = df_area.plot.bar(title='Peak Areas', rot=30, color=color_list)
+ax_stand.set_xlabel("cm⁻¹")
+ax_stand.set_ylabel("Abs (arb.)")
 
 fig_scatter, ax_scatter = plt.subplots()
+colors = plt.cm.viridis(np.linspace(0, 1, len(scatter_data)))
 
-for condition, data in condition_data.items():
-    color = condition_colors[condition]
-    ax_scatter.scatter(data["x"], data["y"], color=color)
+# Create scatter plot for each sample type
+for i, (sample_type, data) in enumerate(scatter_data.items()):
+    x = np.array(data["x"])
+    y = np.array(data["y"])
+    
+    ax_scatter.scatter(x, y, color=colors[i], label=sample_type)
 
-ax_scatter.set_title('Si-H Stretch Area')
+    # Add log fit
+    log_x = log10(x[x>0])
+    log_y = log10(y[x>0])
+    log_fit = np.polyfit(log_x, log_y, 1)
+    x_space = np.linspace(min(x), max(x), 400)
+    y_space = 10**(log_fit[1]) * x_space ** log_fit[0]
+    ax_scatter.plot(x_space, y_space, color=colors[i], label=f"{sample_type} log fit", linestyle='--')
 
-# Apply logarithmic fits and plot them
-for condition, data in condition_data.items():
-    # Exclude zero-valued data points to avoid -inf
-    x_log_fit = [x for x, y in zip(data["x"], data["y"]) if y != 0]
-    y_log_fit = [y for y in data["y"] if y != 0]
+    # Store the fit equation
+    equation_text = f"y = {10**log_fit[1]:.4e} * x ^ {log_fit[0]:.4f}"
+    fit_equations[sample_type] = equation_text
 
-    # # Fit a log curve to the data
-    # try:
-    #     coefficients = np.polyfit(x_log_fit, np.log10(y_log_fit), 1)
-    # except np.linalg.LinAlgError:
-    #     print("Error fitting the data:")
-    #     print("x_log_fit:", x_log_fit)
-    #     print("y_log_fit:", y_log_fit)
-    #     raise
+ax_scatter.set_xlabel("Time (s)")
+ax_scatter.set_ylabel("Peak Area")
+ax_scatter.legend()
 
-    # polynomial = np.poly1d(coefficients)
-    # y_fit = 10**polynomial(x_log_fit)
-    # ax_scatter.plot(x_log_fit, y_fit)
+# Print the fit equations
+for sample_type, equation in fit_equations.items():
+    print(f"{sample_type} fit equation: {equation}")
+
+# Increase font size everywhere but legend
+for fig in [fig_raw, fig_stand, fig_scatter]:
+    for ax in fig.get_axes():
+        for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
+                     ax.get_xticklabels() + ax.get_yticklabels()):
+            item.set_fontsize(2 * item.get_fontsize())
 
 plt.show()
