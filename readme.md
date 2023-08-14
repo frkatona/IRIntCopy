@@ -1,5 +1,9 @@
 # This python script reads all IR Data CSVs in a folder from a given path, normalizes/baseline-corrects them, and plots them as superposed scatterplots and bar graphs for a peak area within each spectrum
 
+![spectra](exports\laser-loading-time-spectra.png "Lased PDMS: loading vs time spectra")
+
+![scatter](exports\laser-loading-time-scatterfit.jpg "Lased PDMS: loading vs time scatterfit")
+
 For now, run from the spectraHandler script
 
 ## Resources:

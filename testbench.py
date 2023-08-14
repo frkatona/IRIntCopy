@@ -3,7 +3,11 @@ import glob
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import glob, os
 from scipy.integrate import simps
+from numpy import log10
 
 def WN_to_Index(wn_array, wn):
     '''Finds wavenumber index in the array'''
@@ -32,38 +36,32 @@ def Peak_Integration(wn_corrected, wn_array, wn_low, wn_high):
     '''Integrate peak areas using Simpson's rule'''
     areas = []
     for group in range(6):
-        index_low = WN_to_Index(wn_array, wn_low[group])
-        index_high = WN_to_Index(wn_array, wn_high[group])
-        area = simps(wn_corrected[index_low:index_high], wn_array[index_low:index_high])
-        
-        # Calculate baseline for the peak
-        m = (wn_corrected[index_low] - wn_corrected[index_high]) / (wn_array[index_low] - wn_array[index_high])
-        b = wn_corrected[index_low] - m * wn_array[index_low]
-        baseline_y = np.array(m * wn_array[index_low:index_high] + b)
-        baseline_area = simps(baseline_y, wn_array[index_low:index_high])
-        
-        areas.append(area - baseline_area)
-    return areas
+        index_low = WN_to_index(WN_array, WN_low[group])
+        index_high = WN_to_index(WN_array, WN_high[group])
+        area = simps(WN_standardized[index_low:index_high], WN_array[index_low:index_high])
+        m = (WN_standardized[index_low] - WN_standardized[index_high])/(WN_array[index_low] - WN_array[index_high])
+        b = WN_standardized[index_low] - m * WN_array[index_low]
+        baseline_y = np.array(m * WN_array[index_low:index_high] + b)
+        baseline_area = simps(baseline_y, WN_array[index_low:index_high])
+        areaarray.append(area - baseline_area)
+    return areaarray
 
-def Extract_Filename_Metadata(file):
-    '''Extract sample type, condition, and time from the file name based on the convention "sampletype_condition_time.csv"'''
-    filename_metadata = file[:-4].split("_")  # Removing ".csv" and split on underscore
-    sample_type = filename_metadata[0]
-    condition_time = filename_metadata[1]
-    sample_repeats = filename_metadata[2] if len(filename_metadata) == 3 else None
-    time = ''.join(filter(str.isdigit, condition_time))
-    return sample_type, condition_time, sample_repeats, time
-
-##---MAIN CODE START---##
-## read files in directory
-readpath = r"CSVs\oven_5ppt-vs-0ppt"
+readpath = r'CSVs/210421_AuPDMS'
 os.chdir(readpath)
 filelist = sorted(glob.glob('*.csv'))
 
-## dataframe initialization
+# Identify all unique conditions in the filelist
+conditions = set(file.split("_", 1)[1][:-4] for file in filelist)
+num_conditions = len(conditions)
+
+# Map each condition to a unique color map
+colormap_dict = {condition: plt.cm.get_cmap(cmap_name)
+                 for condition, cmap_name in zip(conditions, plt.colormaps()[:num_conditions])}
+
+
 columnname = filelist[0].split("_", 1)[1][:-4]
-df_tot = pd.read_csv(filelist[0], skiprows=2, header=None, names=['cm-1', columnname])
-df_tot = df_tot.sort_values(by=['cm-1'], ignore_index=True)
+df_tot = pd.read_csv(filelist[0], skiprows = 2, header = None, names = ['cm-1', columnname])
+df_tot = df_tot.sort_values(by=['cm-1'], ignore_index = True)
 
 ## define wavenumber regions of interest (normalization, baseline correction, and peak integration)
 wn_normal_low, wn_normal_high = 1260, 1263
@@ -74,63 +72,85 @@ groupname = ['Si-CH3', 'Si-H (bend)', 'Si-O-Si', 'Si-H (stretch)', 'CH3', 'vinyl
 
 df_area = pd.DataFrame(index=groupname)
 
-## convert wavenumbers to indices
-wn_array = df_tot['cm-1'].to_numpy()
-index_baseline_low = WN_to_Index(wn_array, wn_baseline_low)
-index_baseline_high = WN_to_Index(wn_array, wn_baseline_high)
-index_normal_low = WN_to_Index(wn_array, wn_normal_low)
-index_normal_high = WN_to_Index(wn_array, wn_normal_high)
+WN_array = df_tot['cm-1'].to_numpy()
+index_baseline_low = WN_to_index(WN_array, WN_baseline_low)
+index_baseline_high = WN_to_index(WN_array, WN_baseline_high)
+index_normal_low = WN_to_index(WN_array, WN_normal_low)
+index_normal_high = WN_to_index(WN_array, WN_normal_high)
 
 ## plot initialization
 fig_raw, ax_raw = plt.subplots()
-fig_stand, ax_corrected = plt.subplots()
-color_list = []
-cubehelix_palette = plt.cm.plasma(np.linspace(0, 1, len(wn_low)))
-x_si_h_stretch_0cb, y_si_h_stretch_0cb = [], []
-x_si_h_stretch_5e3, y_si_h_stretch_5e3 = [], []
+fig_stand, ax_stand = plt.subplots()
 
-## processing and plotting loop
-conditional = "5e-3"
-num_samples = len(filelist)
+color_list = []
+cubehelix_palette = plt.cm.plasma(np.linspace(0, 1, len(WN_low)))
+
+# Parse the condition name from the filename
+condition_names = [file.split("_", 1)[0] for file in filelist]
+
+# Define dictionaries to store colors and data for each condition
+condition_colors = {condition: plt.cm.jet(i / num_samples) for i, condition in enumerate(set(condition_names))}
+condition_data = {condition: {"x": [], "y": []} for condition in condition_names}
+
 for i, file in enumerate(filelist):
-    sample_type, _, _, time = Extract_Filename_Metadata(file)
+    condition = file.split("_", 1)[0]
     columnname = file.split("_", 1)[1][:-4]
-    
-    # read and correct
+
     df_add = pd.read_csv(file, skiprows=2, header=None, names=['cm-1', columnname])
     df_add = df_add.sort_values(by=['cm-1'], ignore_index=True)
-    wn_raw = df_add[columnname].to_numpy()
-    wn_corrected = SpectraCorrection(wn_raw, index_baseline_low, index_baseline_high, index_normal_low, index_normal_high)
+    WN_raw = df_add[columnname].to_numpy()
+    WN_standardized = Standardize(WN_raw, index_baseline_low, index_baseline_high, index_normal_low, index_normal_high)
     
     # store corrected values in dataframe
     df_tot[columnname] = wn_corrected
     area = Peak_Integration(wn_corrected, wn_array, wn_low, wn_high)
     df_area[columnname] = area
 
-    # conditional formatting
-    color = plt.cm.jet(i/num_samples) if conditional in sample_type else plt.cm.viridis(i/num_samples)
+    color = condition_colors[condition]
+    condition_data[condition]["x"].append(i)
+    condition_data[condition]["y"].append(area[3])
+
     color_list.append(color)
-    (x_si_h_stretch_5e3 if conditional in sample_type else x_si_h_stretch_0cb).append(time)
-    (y_si_h_stretch_5e3 if conditional in sample_type else y_si_h_stretch_0cb).append(area[3])  # Si-H (stretch) index is 3
-
-    # plot graphs SPECTRA (RAW) and SPECTRA (CORRECTED)
+    
     df_add.plot('cm-1', columnname, ax=ax_raw, color=color)
-    df_tot.plot('cm-1', columnname, ax=ax_corrected, color=color)
+    df_tot.plot('cm-1', columnname, ax=ax_stand, color=color)
 
-## add peak region cutoff lines to SPECTRA (CORRECTED)
-for j in range(len(wn_low)):
-    ax_corrected.axvline(x=wn_low[j], color=cubehelix_palette[j], linestyle='--', linewidth=2)
-    ax_corrected.axvline(x=wn_high[j], color=cubehelix_palette[j], linestyle='--', linewidth=2)
+for j in range(len(WN_low)):
+    ax_stand.axvline(x=WN_low[j], color=cubehelix_palette[j], linestyle='--', linewidth=2)
+    ax_stand.axvline(x=WN_high[j], color=cubehelix_palette[j], linestyle='--', linewidth=2)
 
 ## plot formatting for SPECTRA (RAW) and SPECTRA (CORRECTED)
 ax_raw.set_title('Raw Spectra')
-ax_corrected.set_title('Corrected Spectra')
+ax_stand.set_title('Corrected Spectra')
+
 ax_area = df_area.plot.bar(title='Peak Areas', rot=30, color=color_list)
 
 ## plot formatting for Si-H (STRETCH) peak area vs time (later, export to csv and use separate plotting/fitting script for kinetics)
 fig_scatter, ax_scatter = plt.subplots()
-ax_scatter.scatter(x_si_h_stretch_0cb, y_si_h_stretch_0cb, color=plt.cm.viridis(np.linspace(0, 1, len(y_si_h_stretch_0cb))))
-ax_scatter.scatter(x_si_h_stretch_5e3, y_si_h_stretch_5e3, color=plt.cm.jet(np.linspace(0, 1, len(y_si_h_stretch_5e3))))
-ax_scatter.set_title('Si-H Stretch Peak Area over Time')
+
+for condition, data in condition_data.items():
+    color = condition_colors[condition]
+    ax_scatter.scatter(data["x"], data["y"], color=color)
+
+ax_scatter.set_title('Si-H Stretch Area')
+
+# Apply logarithmic fits and plot them
+for condition, data in condition_data.items():
+    # Exclude zero-valued data points to avoid -inf
+    x_log_fit = [x for x, y in zip(data["x"], data["y"]) if y != 0]
+    y_log_fit = [y for y in data["y"] if y != 0]
+
+    # # Fit a log curve to the data
+    # try:
+    #     coefficients = np.polyfit(x_log_fit, np.log10(y_log_fit), 1)
+    # except np.linalg.LinAlgError:
+    #     print("Error fitting the data:")
+    #     print("x_log_fit:", x_log_fit)
+    #     print("y_log_fit:", y_log_fit)
+    #     raise
+
+    # polynomial = np.poly1d(coefficients)
+    # y_fit = 10**polynomial(x_log_fit)
+    # ax_scatter.plot(x_log_fit, y_fit)
 
 plt.show()
