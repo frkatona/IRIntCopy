@@ -3,6 +3,10 @@ import pandas as pd
 import numpy as np
 import glob, os
 from scipy.integrate import simps
+from scipy.optimize import curve_fit
+
+def reaction_curve(t, A, k, C):
+    return A * np.exp(-k * t) + C
 
 def WN_to_index(WN_array, WN):
     difference_array = np.absolute(WN_array - WN)
@@ -35,9 +39,10 @@ def PeakIntegration(WN_standardized, WN_array, WN_low, WN_high):
         areaarray.append(area - baseline_area)
     return areaarray
 
-readpath = r'CSVs/oven_5ppt-vs-0ppt'
+readpath = r'CSVs\oven_5ppt-vs-0ppt'
 os.chdir(readpath)
 filelist = sorted(glob.glob('*.csv'))
+conditional = "5e-3"
 
 columnname = filelist[0].split("_", 1)[1][:-4]
 df_tot = pd.read_csv(filelist[0], skiprows = 2, header = None, names = ['cm-1', columnname])
@@ -67,6 +72,7 @@ fig_stand, ax_stand = plt.subplots()
 color_list = []
 cubehelix_palette = plt.cm.plasma(np.linspace(0, 1, len(WN_low)))
 
+
 # Define x arrays for each scatter plot
 x_si_h_stretch_0cb = []
 x_si_h_stretch_5e3 = []
@@ -86,23 +92,40 @@ for i, file in enumerate(filelist):
     area = PeakIntegration(WN_standardized, WN_array, WN_low, WN_high)
     df_area[columnname] = area
 
-    if "5e-3" in file:
-        color = plt.cm.jet(i/num_samples)
+
+    if conditional in file:
+        color = plt.cm.Blues(i/num_samples)
         y_si_h_stretch_5e3.append(area[3])  # Si-H (stretch) index is 3
         x_si_h_stretch_5e3.append(i)  # x values for scatter plot
     else:
-        color = plt.cm.viridis(i/num_samples)
+        color = plt.cm.Greens(i/num_samples)
         y_si_h_stretch_0cb.append(area[3])  # Si-H (stretch) index is 3
         x_si_h_stretch_0cb.append(i)  # x values for scatter plot
 
     color_list.append(color)
     
-    df_add.plot('cm-1', columnname, ax=ax_raw, color=color)
+    df_add.plot('cm-1', columnname, ax=ax_raw, color=color) 
     df_tot.plot('cm-1', columnname, ax=ax_stand, color=color)
+
+# export dataframes to csv
+df_area.iloc[3].to_csv('area.csv')
+
 
 for j in range(len(WN_low)):
     ax_stand.axvline(x=WN_low[j], color=cubehelix_palette[j], linestyle='--', linewidth=2)
     ax_stand.axvline(x=WN_high[j], color=cubehelix_palette[j], linestyle='--', linewidth=2)
+
+dark_blue = '#00008B'
+grey = '#2E6930'
+
+if conditional in file:
+    color = dark_blue
+    y_si_h_stretch_5e3.append(area[3])  # Si-H (stretch) index is 3
+    x_si_h_stretch_5e3.append(i)  # x values for scatter plot
+else:
+    color = grey
+    y_si_h_stretch_0cb.append(area[3])  # Si-H (stretch) index is 3
+    x_si_h_stretch_0cb.append(i)  # x values for scatter plot
 
 ax_raw.set_title('Raw Spectra')
 ax_stand.set_title('Corrected Spectra')
@@ -110,8 +133,8 @@ ax_stand.set_title('Corrected Spectra')
 ax_area = df_area.plot.bar(title='Peak Areas', rot=30, color=color_list)
 
 fig_scatter, ax_scatter = plt.subplots()
-ax_scatter.scatter(x_si_h_stretch_0cb, y_si_h_stretch_0cb, color=plt.cm.viridis(np.linspace(0, 1, len(y_si_h_stretch_0cb))))
-ax_scatter.scatter(x_si_h_stretch_5e3, y_si_h_stretch_5e3, color=plt.cm.jet(np.linspace(0, 1, len(y_si_h_stretch_5e3))))
+ax_scatter.scatter(x_si_h_stretch_0cb, y_si_h_stretch_0cb, color=grey)
+ax_scatter.scatter(x_si_h_stretch_5e3, y_si_h_stretch_5e3, color=dark_blue)
 ax_scatter.set_title('Si-H Stretch Area')
 
 # Apply logarithmic fits and plot them
@@ -127,11 +150,17 @@ y_si_h_stretch_5e3_log_fit = [y for y in y_si_h_stretch_5e3 if y != 0]
 coefficients_0cb = np.polyfit(x_si_h_stretch_0cb_log_fit, np.log10(y_si_h_stretch_0cb_log_fit), 1)
 polynomial_0cb = np.poly1d(coefficients_0cb)
 y_fit_0cb = 10**polynomial_0cb(x_si_h_stretch_0cb_log_fit)
-ax_scatter.plot(x_si_h_stretch_0cb_log_fit, y_fit_0cb, color="green")
+ax_scatter.plot(x_si_h_stretch_0cb_log_fit, y_fit_0cb, color=grey)
 
 coefficients_5e3 = np.polyfit(x_si_h_stretch_5e3_log_fit, np.log10(y_si_h_stretch_5e3_log_fit), 1)
 polynomial_5e3 = np.poly1d(coefficients_5e3)
 y_fit_5e3 = 10**polynomial_5e3(x_si_h_stretch_5e3_log_fit)
-ax_scatter.plot(x_si_h_stretch_5e3_log_fit, y_fit_5e3, color="red")
+ax_scatter.plot(x_si_h_stretch_5e3_log_fit, y_fit_5e3, color=dark_blue)
+
+# hide legends
+ax_raw.legend(loc=None)
+ax_stand.legend(loc=None)
+ax_area.legend(loc=None)
+ax_scatter.legend(loc=None)
 
 plt.show()

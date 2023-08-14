@@ -3,20 +3,17 @@
 For now, run from the spectraHandler script
 
 ## Resources:
- - https://www.gelest.com/wp-content/uploads/5000A_Section1_InfraredAnalysis.pdf
  - J Hofman's 2016 "IR Spectroscopic Method for Determiation of Silicone Cross-Linking"
- - Joseph Fortenbaugh's 2019 PSU Doctoral Thesis
 
 ## To-do
-
- - find best cutoffs for bands iteratively and finding the highest correlation with cure time
- - spectrum cleanup: add vertical bars at band cutoffs
+ - create a universal convention for the input
+ - refactor for readability (and separate Si-H output to CSV from its workup?)
 
 ### General Graphing
-- Bar Graph
-    - use averages and graph bars with standard error/dev first (how to procedurally take arbitrary number of values to average)
-    - in integration bar graph: procedurally color bars for each set to separate without label names
-    - have bar labels end on tick instead of middle on tick
+- Spectra (raw)
+- Spectra (corrected)
+- Peak integrations vs time bar chart
+- Si-H integration vs time kinetics-fit scatterplot
 
 ### General Readability/Usability/Efficiency
 - GUI (input file directory, graphs, wavenumber bounds, checkbox for included plot types and export) and web implementation'
@@ -30,3 +27,10 @@ For now, run from the spectraHandler script
 - thinking: homogeneity of samples in ATR?
 - path length - cb change dielectric meaningfully? (what is dielectic constant for each)
 - creating some surface effects that could lead to scatter in measurement?
+
+Ben conventions
+- gray cirlce = no laser
+- red diamond = laser
+
+dark_blue = '#1AA7EC'
+grey = '#FFA500'
