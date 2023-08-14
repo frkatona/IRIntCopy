@@ -1,166 +1,137 @@
-import matplotlib.pyplot as plt
-import pandas as pd
+import os
+import glob
 import numpy as np
-import glob, os
+import pandas as pd
+import matplotlib.pyplot as plt
 from scipy.integrate import simps
-from scipy.optimize import curve_fit
 
-def reaction_curve(t, A, k, C):
-    return A * np.exp(-k * t) + C
-
-def WN_to_index(WN_array, WN):
-    difference_array = np.absolute(WN_array - WN)
+def WN_to_Index(wn_array, wn):
+    '''Finds wavenumber index in the array'''
+    difference_array = np.absolute(wn_array - wn)
     return difference_array.argmin()
 
-def Standardize(WN_raw, index_baseline_low, index_baseline_high, index_normal_low, index_normal_high):
-    if WN_raw.max() > 60: 
-        WN_raw /= 100
-        WN_raw += 1e-10 
-        WN_raw = np.log10(WN_raw) * -1
+def SpectraCorrection(wn_raw, index_baseline_low, index_baseline_high, index_normal_low, index_normal_high):
+    '''Corrects spectra for baseline drift and normalizes the data'''
+    ## converts to absorbance if max value suggests spectra is in transmittance
+    if wn_raw.max() > 60: 
+        wn_raw /= 100
+        wn_raw += 1e-10 
+        wn_raw = np.log10(wn_raw) * -1
 
-    baseline_diff = WN_raw[index_baseline_low:index_baseline_high].mean() 
-    WN_standardized = WN_raw - baseline_diff
+    ## baseline correction
+    baseline_diff = wn_raw[index_baseline_low:index_baseline_high].mean() 
+    wn_corrected = wn_raw - baseline_diff
 
-    WN_norm = WN_standardized[index_normal_low:index_normal_high].mean() 
-    WN_standardized /= WN_norm
+    # normalization
+    wn_norm = wn_corrected[index_normal_low:index_normal_high].mean() 
+    wn_corrected /= wn_norm
 
-    return WN_standardized
+    return wn_corrected
 
-def PeakIntegration(WN_standardized, WN_array, WN_low, WN_high):
-    areaarray = []
+def Peak_Integration(wn_corrected, wn_array, wn_low, wn_high):
+    '''Integrate peak areas using Simpson's rule approximation'''
+    areas = []
     for group in range(6):
-        index_low = WN_to_index(WN_array, WN_low[group])
-        index_high = WN_to_index(WN_array, WN_high[group])
-        area = simps(WN_standardized[index_low:index_high], WN_array[index_low:index_high])
-        m = (WN_standardized[index_low] - WN_standardized[index_high])/(WN_array[index_low] - WN_array[index_high])
-        b = WN_standardized[index_low] - m * WN_array[index_low]
-        baseline_y = np.array(m * WN_array[index_low:index_high] + b)
-        baseline_area = simps(baseline_y, WN_array[index_low:index_high])
-        areaarray.append(area - baseline_area)
-    return areaarray
+        index_low = WN_to_Index(wn_array, wn_low[group])
+        index_high = WN_to_Index(wn_array, wn_high[group])
+        area = simps(wn_corrected[index_low:index_high], wn_array[index_low:index_high])
+        
+        # Calculate baseline for the peak
+        m = (wn_corrected[index_low] - wn_corrected[index_high]) / (wn_array[index_low] - wn_array[index_high])
+        b = wn_corrected[index_low] - m * wn_array[index_low]
+        baseline_y = np.array(m * wn_array[index_low:index_high] + b)
+        baseline_area = simps(baseline_y, wn_array[index_low:index_high])
+        
+        areas.append(area - baseline_area)
+    return areas
 
-readpath = r'CSVs/oven_5ppt-vs-0ppt'
+def Extract_Filename_Metadata(file):
+    '''Extract sample type, condition, and time from the file name based on the convention "cure-condition_agent-loading_time-in-s.csv", e.g. "laser-15W/cm2_5e-3-CB_20.csv"'''
+    filename_metadata = file[:-4].split("_")
+    cure_condition = filename_metadata[0]
+    agent_loading = filename_metadata[1]
+    time_in_seconds = filename_metadata[2]
+    # time = ''.join(filter(str.isdigit, time_in_seconds))
+    return cure_condition, agent_loading, time_in_seconds
+
+##----------------------------MAIN CODE START----------------------------##
+
+## read files in directory
+readpath = r"CSVs\oven_5ppt-vs-0ppt"
 os.chdir(readpath)
 filelist = sorted(glob.glob('*.csv'))
-conditional = "5e-3"
 
+## dataframe initialization
 columnname = filelist[0].split("_", 1)[1][:-4]
-df_tot = pd.read_csv(filelist[0], skiprows = 2, header = None, names = ['cm-1', columnname])
-df_tot = df_tot.sort_values(by=['cm-1'], ignore_index = True)
+df_tot = pd.read_csv(filelist[0], skiprows=2, header=None, names=['cm-1', columnname])
+df_tot = df_tot.sort_values(by=['cm-1'], ignore_index=True)
 
-WN_normal_low, WN_normal_high = 1260, 1263
-WN_baseline_low, WN_baseline_high = 3400, 3600
-
-WN_group = 0
-WN_low = [780, 830, 970, 2100, 2930, 3060]
-WN_high = [830, 930, 1150, 2225, 3000, 3080]
+## define wavenumber regions of interest (normalization, baseline correction, and peak integration)
+wn_normal_low, wn_normal_high = 1260, 1263
+wn_baseline_low, wn_baseline_high = 3400, 3600
+wn_low = [780, 830, 970, 2100, 2930, 3060]
+wn_high = [830, 930, 1150, 2225, 3000, 3080]
 groupname = ['Si-CH3', 'Si-H (bend)', 'Si-O-Si', 'Si-H (stretch)', 'CH3', 'vinyl (C=C)']
 
 df_area = pd.DataFrame(index=groupname)
 
-WN_array = df_tot['cm-1'].to_numpy()
-index_baseline_low = WN_to_index(WN_array, WN_baseline_low)
-index_baseline_high = WN_to_index(WN_array, WN_baseline_high)
-index_normal_low = WN_to_index(WN_array, WN_normal_low)
-index_normal_high = WN_to_index(WN_array, WN_normal_high)
+## convert wavenumbers to indices
+wn_array = df_tot['cm-1'].to_numpy()
+index_baseline_low = WN_to_Index(wn_array, wn_baseline_low)
+index_baseline_high = WN_to_Index(wn_array, wn_baseline_high)
+index_normal_low = WN_to_Index(wn_array, wn_normal_low)
+index_normal_high = WN_to_Index(wn_array, wn_normal_high)
 
-num_samples = len(filelist)
-
+## plot initialization
 fig_raw, ax_raw = plt.subplots()
-fig_stand, ax_stand = plt.subplots()
-
+fig_stand, ax_corrected = plt.subplots()
 color_list = []
-cubehelix_palette = plt.cm.plasma(np.linspace(0, 1, len(WN_low)))
+cubehelix_palette = plt.cm.plasma(np.linspace(0, 1, len(wn_low)))
+x_si_h_stretch_0cb, y_si_h_stretch_0cb = [], []
+x_si_h_stretch_5e3, y_si_h_stretch_5e3 = [], []
 
-
-# Define x arrays for each scatter plot
-x_si_h_stretch_0cb = []
-x_si_h_stretch_5e3 = []
-
-y_si_h_stretch_0cb = []
-y_si_h_stretch_5e3 = []
-
+## processing and plotting loop
+conditional = "5e-3"
+num_samples = len(filelist)
 for i, file in enumerate(filelist):
+    cure_condition, agent_loading, time_in_seconds = Extract_Filename_Metadata(file)
     columnname = file.split("_", 1)[1][:-4]
-
+    
+    # read and correct
     df_add = pd.read_csv(file, skiprows=2, header=None, names=['cm-1', columnname])
     df_add = df_add.sort_values(by=['cm-1'], ignore_index=True)
-    WN_raw = df_add[columnname].to_numpy()
-    WN_standardized = Standardize(WN_raw, index_baseline_low, index_baseline_high, index_normal_low, index_normal_high)
+    wn_raw = df_add[columnname].to_numpy()
+    wn_corrected = SpectraCorrection(wn_raw, index_baseline_low, index_baseline_high, index_normal_low, index_normal_high)
     
-    df_tot[columnname] = WN_standardized
-    area = PeakIntegration(WN_standardized, WN_array, WN_low, WN_high)
+    # store corrected values in dataframe
+    df_tot[columnname] = wn_corrected
+    area = Peak_Integration(wn_corrected, wn_array, wn_low, wn_high)
     df_area[columnname] = area
 
-
-    if conditional in file:
-        color = plt.cm.Blues(i/num_samples)
-        y_si_h_stretch_5e3.append(area[3])  # Si-H (stretch) index is 3
-        x_si_h_stretch_5e3.append(i)  # x values for scatter plot
-    else:
-        color = plt.cm.Greens(i/num_samples)
-        y_si_h_stretch_0cb.append(area[3])  # Si-H (stretch) index is 3
-        x_si_h_stretch_0cb.append(i)  # x values for scatter plot
-
+    # conditional formatting
+    color = plt.cm.jet(i/num_samples) if conditional in agent_loading else plt.cm.viridis(i/num_samples)
     color_list.append(color)
-    
-    df_add.plot('cm-1', columnname, ax=ax_raw, color=color) 
-    df_tot.plot('cm-1', columnname, ax=ax_stand, color=color)
+    (x_si_h_stretch_5e3 if conditional in agent_loading else x_si_h_stretch_0cb).append(time_in_seconds)
+    (y_si_h_stretch_5e3 if conditional in agent_loading else y_si_h_stretch_0cb).append(area[3])  # Si-H (stretch) index is 3
 
-# export dataframes to csv
-df_area.iloc[3].to_csv('area.csv')
+    # plot graphs SPECTRA (RAW) and SPECTRA (CORRECTED)
+    df_add.plot('cm-1', columnname, ax=ax_raw, color=color)
+    df_tot.plot('cm-1', columnname, ax=ax_corrected, color=color)
 
+## add peak region cutoff lines to SPECTRA (CORRECTED)
+for j in range(len(wn_low)):
+    ax_corrected.axvline(x=wn_low[j], color=cubehelix_palette[j], linestyle='--', linewidth=2)
+    ax_corrected.axvline(x=wn_high[j], color=cubehelix_palette[j], linestyle='--', linewidth=2)
 
-for j in range(len(WN_low)):
-    ax_stand.axvline(x=WN_low[j], color=cubehelix_palette[j], linestyle='--', linewidth=2)
-    ax_stand.axvline(x=WN_high[j], color=cubehelix_palette[j], linestyle='--', linewidth=2)
-
-dark_blue = '#00008B'
-grey = '#2E6930'
-
-if conditional in file:
-    color = dark_blue
-    y_si_h_stretch_5e3.append(area[3])  # Si-H (stretch) index is 3
-    x_si_h_stretch_5e3.append(i)  # x values for scatter plot
-else:
-    color = grey
-    y_si_h_stretch_0cb.append(area[3])  # Si-H (stretch) index is 3
-    x_si_h_stretch_0cb.append(i)  # x values for scatter plot
-
+## plot formatting for SPECTRA (RAW) and SPECTRA (CORRECTED)
 ax_raw.set_title('Raw Spectra')
-ax_stand.set_title('Corrected Spectra')
-
+ax_corrected.set_title('Corrected Spectra')
 ax_area = df_area.plot.bar(title='Peak Areas', rot=30, color=color_list)
 
+## plot formatting for Si-H (STRETCH) peak area vs time (later, export to csv and use separate plotting/fitting script for kinetics)
 fig_scatter, ax_scatter = plt.subplots()
-ax_scatter.scatter(x_si_h_stretch_0cb, y_si_h_stretch_0cb, color=grey)
-ax_scatter.scatter(x_si_h_stretch_5e3, y_si_h_stretch_5e3, color=dark_blue)
-ax_scatter.set_title('Si-H Stretch Area')
-
-# Apply logarithmic fits and plot them
-
-# Exclude zero-valued data points to avoid -inf
-x_si_h_stretch_0cb_log_fit = [x for x, y in zip(x_si_h_stretch_0cb, y_si_h_stretch_0cb) if y != 0]
-y_si_h_stretch_0cb_log_fit = [y for y in y_si_h_stretch_0cb if y != 0]
-
-x_si_h_stretch_5e3_log_fit = [x for x, y in zip(x_si_h_stretch_5e3, y_si_h_stretch_5e3) if y != 0]
-y_si_h_stretch_5e3_log_fit = [y for y in y_si_h_stretch_5e3 if y != 0]
-
-# Fit a log curve to the data
-coefficients_0cb = np.polyfit(x_si_h_stretch_0cb_log_fit, np.log10(y_si_h_stretch_0cb_log_fit), 1)
-polynomial_0cb = np.poly1d(coefficients_0cb)
-y_fit_0cb = 10**polynomial_0cb(x_si_h_stretch_0cb_log_fit)
-ax_scatter.plot(x_si_h_stretch_0cb_log_fit, y_fit_0cb, color=grey)
-
-coefficients_5e3 = np.polyfit(x_si_h_stretch_5e3_log_fit, np.log10(y_si_h_stretch_5e3_log_fit), 1)
-polynomial_5e3 = np.poly1d(coefficients_5e3)
-y_fit_5e3 = 10**polynomial_5e3(x_si_h_stretch_5e3_log_fit)
-ax_scatter.plot(x_si_h_stretch_5e3_log_fit, y_fit_5e3, color=dark_blue)
-
-# hide legends
-ax_raw.legend(loc=None)
-ax_stand.legend(loc=None)
-ax_area.legend(loc=None)
-ax_scatter.legend(loc=None)
+ax_scatter.scatter(x_si_h_stretch_0cb, y_si_h_stretch_0cb, color=plt.cm.viridis(np.linspace(0, 1, len(y_si_h_stretch_0cb))))
+ax_scatter.scatter(x_si_h_stretch_5e3, y_si_h_stretch_5e3, color=plt.cm.jet(np.linspace(0, 1, len(y_si_h_stretch_5e3))))
+ax_scatter.set_title('Si-H Stretch Peak Area over Time')
 
 plt.show()
