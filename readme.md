@@ -1,4 +1,4 @@
-# IR CSV Kinetics Extractor
+# IR CSV PDMS Kinetics Extractor
 
 ![spectra](exports\laser-loading-time-spectra.png "Lased PDMS: loading vs time spectra")
 
@@ -13,32 +13,36 @@
 - Peak integrations vs time bar chart
 - Si-H integration vs time kinetics-fit scatterplot
 
-## To-do
+## dev to-do
  - confirm refactor usability
  - standardize the input csv convention (working version: "condition_time-in-s.csv", e.g. "5e-3_20.csv")
+ - change the peak integration script to output a simplified format: time, condition 1, condition 2, etc.
  - procedurally check for conditions
   - cure (ambient, laser, oven) and photothermal agent (none, AuNP, CB)
  - replace color maps with condition conventions listed below
  - separate steps 
     - script 1: consolidate csv folder into a single csv with raw spectra, normalized spectra, and peak integrations and show plots
     - script 2: fit Si-H integrations from above dataframe to a A_t = A_0 e^(-kt) + C kinetic model, show plot, and export to csv
-
+ - update example images in readme
+ - extract/export other information from broader peak integration
+  - variance of the standard groups other than the one normalized to (to show it's much smaller than Si-H)
+  - how exactly does the Si-O-Si peak change with CB loading or other cure conditions?  both intensity and shifting seem apparent
 ### Graph formatting conditions (WiP):
-Cure condition
+cure-condition
 - ambient
-  - gray (#FFA500) hollow cirlce 
+  - gray (#FFA500)
 - laser
-  - red (#FF0000) hollow diamond
+  - red (#FF0000)
 - oven
-  - blue (#1AA7EC) hollow square
+  - blue (#1AA7EC)
 
-Photothermal agent
+agent-loading
 - no-agent
-  - white (#FFFFFF) filled, outlined circle
+  - circle
 - AuNP
-  - yellow (#FFFF00) hollow triangle
-- CB
-  - black (#000000) hollow circle
+  - square
+- 5e-3
+  - upside-down triangle
 
 Higher loading and temperatures --> darker (value? sat?), lightness floor at 0.25 (?)
 
