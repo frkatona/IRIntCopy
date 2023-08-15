@@ -20,6 +20,7 @@
  - procedurally check for conditions
   - cure (ambient, laser, oven) and photothermal agent (none, AuNP, CB)
  - replace color maps with condition conventions listed below
+ - replace font in each step with segoe or similar
  - separate steps 
     - script 1: consolidate csv folder into a single csv with raw spectra, normalized spectra, and peak integrations and show plots
     - script 2: fit Si-H integrations from above dataframe to a A_t = A_0 e^(-kt) + C kinetic model, show plot, and export to csv

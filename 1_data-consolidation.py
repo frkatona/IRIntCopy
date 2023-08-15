@@ -66,6 +66,6 @@ def Consolidate_And_Plot_Spectra(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath = r"CSVs\oven_5ppt-vs-0ppt"
+readpath = r"CSVs\10A_5ppt-vs-0-vs-time"
 
 Consolidate_And_Plot_Spectra(readpath)
