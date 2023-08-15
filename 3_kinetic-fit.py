@@ -64,7 +64,7 @@ def plot_si_h_stretch_scatter_updated_with_k(readpath):
     
     ax.set_xlabel('time (s)', fontsize=axis_label_font_size)
     ax.set_ylabel('Si-H intensity', fontsize=axis_label_font_size)
-    ax.tick_params(which='major', length=7, direction='out', labelsize=TICK_FONT_SIZE)
+    ax.tick_params(which='major', length=7, direction='out', labelsize=tick_font_size)
     ax.tick_params(axis='y', which='minor', length=0)
     ax.set_xticks(np.arange(0, 1751, 500))
     ax.grid(False)
