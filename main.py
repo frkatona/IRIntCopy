@@ -8,28 +8,28 @@ from scipy.integrate import simps
 
 conventions = {
     'cure-condition': {
-        'ambient': '#FFA500', # orange
-        'laser': '#FF0000', # red
-        'oven': '#1AA7EC' # blue
+        'ambient': 'o',  # circle
+        'laser': 's',  # square
+        'oven': 'v'  # upside-down triangle
     },
     'agent-loading': {
         'no-agent': '#FFA500', # orange
         'AuNP': '#FF0000', # red
-        'CB-5e-3': '#1AA7EC', # blue
-        'CB-5e-4': '#1AA7EE', # bluer
-        'CB-5e-5': '#1AA7EF' # bluest
+        ## blues for CB
+        'CB-5e-3': '#281E5D', # indigo
+        'CB-5e-4': '#0A1172', # navy
+        'CB-5e-5': '#1338BE', # cobalt
+        'CB-5e-6': '#016064', # ocean
+        'CB-5e-7': '#52B2BF', # sapphire
+        'CB-5e-8': '#1AA7EE', # sky
     }
-    # 'agent-loading': {
-    #     'no-agent': 'o',  # circle
-    #     'AuNP': 's',  # square
-    #     '5e-3': 'v'  # upside-down triangle
-    # }
 }
 
 def Get_Gradient_Color(base_color, value):
     """
     Get a gradient color based on a base color and a value between 0 and 1.
     """
+    value /= 1.5
     cmap = matplotlib.colors.LinearSegmentedColormap.from_list("custom", [base_color, "white"], N=256)
     return cmap(value)
 

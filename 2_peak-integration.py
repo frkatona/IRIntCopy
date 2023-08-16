@@ -35,15 +35,19 @@ def Integrate_And_Plot_Bar_Graph(readpath):
         color_list.append(color)
 
     # Plot the bar graph for peak areas
-    ax_area = df_area.plot.bar(title='Peak Areas', rot=30, color=color_list)
+    ax_area = df_area.plot.bar(title='Peak Areas', rot=30, color=color_list, edgecolor='black', linewidth=1)
     ax_area.set_title('Peak Areas')
     plt.show()
 
+
     # Export the integrated peak areas to a CSV
-    writepath = 'peak_areas.csv'
-    df_area.to_csv(os.path.join(os.path.dirname(readpath), writepath))
+    base_name = os.path.basename(readpath)
+    name_without_extension = os.path.splitext(base_name)[0]
+    new_name = f"{name_without_extension}_peak_areas.csv"
+    writepath = os.path.join(os.path.dirname(readpath), new_name)
+    df_area.to_csv(writepath)
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath = r"exports\10A_5ppt-vs-0-vs-time_consolidated.csv"
+readpath = r"exports\220418_808nm_3p5A_5e-5cbPDMS_consolidated.csv"
 Integrate_And_Plot_Bar_Graph(readpath)
