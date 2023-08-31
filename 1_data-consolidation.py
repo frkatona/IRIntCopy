@@ -2,7 +2,17 @@ import os
 import glob
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 from main import WN_to_Index, SpectraCorrection, Extract_Filename_Metadata, Get_Convention, Get_Gradient_Color
+
+def interpolate_to_common_wn(df, common_wn):
+    """
+    Interpolates the dataframe to a common set of wavenumbers.
+    """
+    # Interpolate
+    df_interpolated = df.set_index('cm-1').reindex(common_wn).interpolate(method='linear').reset_index()
+    df_interpolated.columns = ['cm-1'] + list(df.columns[1:])
+    return df_interpolated
 
 def Consolidate_And_Plot_Spectra(readpath):
     os.chdir(readpath)
@@ -11,8 +21,12 @@ def Consolidate_And_Plot_Spectra(readpath):
     # sort the file list based on the time-in-seconds metadata
     filelist.sort(key=lambda x: float(Extract_Filename_Metadata(x)[2]))
 
+    # Define a common set of wavenumbers (this range and step is just an example, adjust accordingly)
+    common_wn = np.arange(400, 4000, 1)  # from 400 to 4000 with a step of 1
+    df_tot = pd.DataFrame({'cm-1': common_wn})
+
     # dataframe initialization
-    columnname = filelist[0].split("_", 1)[1][:-4]
+    columnname = os.path.splitext(filelist[0])[0]
     df_tot = pd.read_csv(filelist[0], skiprows=2, header=None, names=['cm-1', columnname])
     df_tot = df_tot.sort_values(by=['cm-1'], ignore_index=True)
 
@@ -34,7 +48,7 @@ def Consolidate_And_Plot_Spectra(readpath):
     num_samples = len(filelist)
     for i, file in enumerate(filelist):
         cure_condition, agent_loading, time_in_seconds = Extract_Filename_Metadata(file)
-        columnname = file.split("_", 1)[1][:-4]
+        columnname = os.path.splitext(file)[0]
 
         # read and correct
         df_add = pd.read_csv(file, skiprows=2, header=None, names=['cm-1', columnname])
@@ -66,5 +80,5 @@ def Consolidate_And_Plot_Spectra(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath = r"CSVs\220418_808nm_3p5A_5e-5cbPDMS"
+readpath = r"CSVs\230831_cb-cure-crazy-long-scan-cure-extent-compare"
 Consolidate_And_Plot_Spectra(readpath)

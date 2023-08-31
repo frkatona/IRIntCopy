@@ -16,6 +16,12 @@ conventions = {
         'no-agent': '#FFA500', # orange
         'AuNP': '#FF0000', # red
         ## blues for CB
+        'CB-1e-3': '#281E5D', # indigo
+        'CB-1e-4': '#0A1172', # navy
+        'CB-1e-5': '#1338BE', # cobalt
+        'CB-1e-6': '#016064', # ocean
+        'CB-1e-7': '#52B2BF', # sapphire
+        'CB-1e-8': '#1AA7EE', # sky
         'CB-5e-3': '#281E5D', # indigo
         'CB-5e-4': '#0A1172', # navy
         'CB-5e-5': '#1338BE', # cobalt
