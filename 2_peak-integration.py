@@ -22,7 +22,11 @@ def Integrate_And_Plot_Bar_Graph(readpath):
     color_list = []
     num_samples = len(df_tot.columns) - 1
     for i, columnname in enumerate(df_tot.columns[1:]):  # Skip the 'cm-1' column
-        agent_loading, time_in_seconds = columnname.split("_")[0], columnname.split("_")[1]
+        split_columnname = columnname.split("_")
+        if len(split_columnname) == 2:
+            agent_loading, time_in_seconds = columnname.split("_")[0], columnname.split("_")[1]
+        elif len(split_columnname) == 3:
+            _, agent_loading, time_in_seconds = columnname.split("_")[0], columnname.split("_")[1], columnname.split("_")[2]
         
         # Integrate the peak areas
         wn_corrected = df_tot[columnname].to_numpy()
@@ -31,7 +35,11 @@ def Integrate_And_Plot_Bar_Graph(readpath):
 
         # Conditional formatting for colors
         base_color = Get_Convention('agent-loading', agent_loading)
-        color = Get_Gradient_Color(base_color, 1 - i/num_samples)  # Invert the gradient
+        try:
+            color = Get_Gradient_Color(base_color, 1 - i/num_samples)
+        except:
+            color = 'black'
+            print(f"Error: {agent_loading} is not a valid agent loading.")
         color_list.append(color)
 
     # Plot the bar graph for peak areas
@@ -49,5 +57,5 @@ def Integrate_And_Plot_Bar_Graph(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath = r"exports\230825_cb-cure-time-tests-and-starter-LAO-tets_consolidated.csv"
+readpath = r"exports\230831_cb-cure-crazy-long-scan-cure-extent-compare_consolidated.csv"
 Integrate_And_Plot_Bar_Graph(readpath)

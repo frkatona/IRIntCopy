@@ -68,7 +68,6 @@ def Consolidate_And_Plot_Spectra(readpath):
     # plot formatting for SPECTRA (RAW) and SPECTRA (CORRECTED)
     ax_raw.set_title('Raw Spectra')
     ax_corrected.set_title('Corrected Spectra')
-    plt.show()
 
     # Export consolidated dataframe to CSV
     script_directory = os.path.dirname(os.path.realpath(__file__))
@@ -77,6 +76,9 @@ def Consolidate_And_Plot_Spectra(readpath):
     writepath = os.path.join(exports_directory, filename)
 
     df_tot.to_csv(writepath, index=False)
+
+    plt.show()
+
 
 ##----------------------------MAIN CODE START----------------------------##
 
