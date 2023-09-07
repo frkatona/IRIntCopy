@@ -86,5 +86,5 @@ def plot_si_h_stretch_scatter_updated_with_k(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath_updated = r"exports\230825_cb-cure-time-tests-and-starter-LAO-tets_consolidated_peak_areas.csv"  # You need to provide the path to your CSV file
+readpath_updated = r"exports\221130_cbLaserSaltPlate_8A_5e-3_consolidated_peak_areas.csv"  # You need to provide the path to your CSV file
 plot_si_h_stretch_scatter_updated_with_k(readpath_updated)
