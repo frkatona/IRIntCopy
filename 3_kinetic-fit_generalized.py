@@ -19,7 +19,7 @@ def plot_si_h_stretch_scatter_updated_with_k(readpath):
 
     # Extract the Si-H (stretch) peak areas and the associated times
     si_h_stretch_values = df_area.loc['Si-H (stretch)'].values
-    times = [int(column.split('_')[1]) for column in df_area.columns]
+    times = [int(column.split('_')[-1]) for column in df_area.columns]
 
     # Extract agent loadings from column headers
     agent_loadings = [column.split('_')[0] for column in df_area.columns]
@@ -32,7 +32,7 @@ def plot_si_h_stretch_scatter_updated_with_k(readpath):
     axis_label_font_size = 32
     tick_font_size = 24
     legend_font_size = 20
-    font_size_equation = 15
+    font_size_equation = 20
     
     # Scatter and Fit Plot
     fig, ax = plt.subplots(figsize=(12, 7))
@@ -52,7 +52,7 @@ def plot_si_h_stretch_scatter_updated_with_k(readpath):
         extended_time_agent = np.linspace(0, 1750, 1000)
         extended_fit_agent = exp_func(extended_time_agent, *params_agent)
     
-        ax.scatter(times_agent, values_agent, color=color, edgecolors=color, linewidths=5, marker=marker, s=6*plt.rcParams['lines.markersize']**2, facecolors='none', label=agent)
+        ax.scatter(times_agent, values_agent, color=color, edgecolors=color, linewidths=5, marker=marker, s=6*plt.rcParams['lines.markersize']**2, facecolors='none', label=agent, alpha=0.8)
         ax.plot(extended_time_agent, extended_fit_agent, color=color, linewidth=2)
 
         # Write the equations for the fits using the coordinates with offsets
@@ -86,5 +86,5 @@ def plot_si_h_stretch_scatter_updated_with_k(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath_updated = r"exports\221130_cbLaserSaltPlate_8A_5e-3_consolidated_peak_areas.csv"  # You need to provide the path to your CSV file
+readpath_updated = r"exports\221202_10A_808nm_5e-3vs0cb_consolidated_peak_areas.csv"  # You need to provide the path to your CSV file
 plot_si_h_stretch_scatter_updated_with_k(readpath_updated)

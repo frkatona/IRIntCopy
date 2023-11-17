@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import os
 from scipy.optimize import curve_fit
 import numpy as np
@@ -27,8 +28,12 @@ def Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath):
     # Plot initialization for Pseudo-Voigt fit
     plt.figure(figsize=(14, 8))
     
+    # Create a color map
+    n = len(df_subset.columns[1:])  # Number of datasets
+    colors = cm.Reds(np.linspace(0.2, 0.8, n))  # Generate colors from the Reds colormap
+
     # Fit the Pseudo-Voigt function to each dataset
-    for i, columnname in enumerate(df_subset.columns[1:]):  # Skip the 'cm-1' column
+    for i, (columnname, color) in enumerate(zip(df_subset.columns[1:], colors)):
         y_data = df_subset[columnname]
         x_data = df_subset['cm-1']
         
@@ -44,15 +49,13 @@ def Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath):
         fit_params_dict[columnname] = params
         A_params_dict[columnname] = params[0]
         
-        # Plot the original data
-        plt.plot(x_data, y_data, label=f'Original - {columnname}')
+        # Plot the original data and fitted curve using the same color
+        plt.plot(x_data, y_data, label=f'Original - {columnname}', color=color)
+        plt.plot(x_data, pseudo_voigt(x_data, *params), linestyle='--', label=f'Fitted - {columnname}', color=color)
         
-        # Plot the fitted curve
-        plt.plot(x_data, pseudo_voigt(x_data, *params), linestyle='--', label=f'Fitted - {columnname}')
-    
     plt.xlabel('Wavenumber (cm-1)', fontsize=14)
     plt.ylabel('Absorbance', fontsize=14)
-    plt.title('Pseudo-Voigt Fit on Original Data', fontsize=16)
+    plt.title('Pseudo-Voigt Fit', fontsize=16)
     plt.legend()
     plt.grid(True)
     
@@ -98,7 +101,11 @@ def Integrate_And_Plot_Bar_Graph(readpath):
             agent_loading, time_in_seconds = columnname.split("_")[0], columnname.split("_")[1]
         elif len(split_columnname) == 3:
             _, agent_loading, time_in_seconds = columnname.split("_")[0], columnname.split("_")[1], columnname.split("_")[2]
+        else:
+            print("Error: The column name is not formatted for a 2/3 '_' split")
+            break
         
+
         # Integrate the peak areas
         wn_corrected = df_tot[columnname].to_numpy()
         area = Peak_Integration(wn_corrected, wn_array, wn_low, wn_high)
@@ -129,6 +136,6 @@ def Integrate_And_Plot_Bar_Graph(readpath):
 ##----------------------------MAIN CODE START----------------------------##
 
 # readpath = r'exports\230831_cb-cure-crazy-long-scan-cure-extent-compare_consolidated.csv'
-readpath = r"exports\221130_cbLaserSaltPlate_8A_5e-3_consolidated.csv"
+readpath = r"exports\221202_10A_808nm_5e-3vs0cb_consolidated.csv"
 Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath)
 # Integrate_And_Plot_Bar_Graph(readpath)

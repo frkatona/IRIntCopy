@@ -5,9 +5,12 @@
 ![scatter](exports\laser-loading-time-scatterfit.jpg "Lased PDMS: loading vs time scatterfit")
 
 ## to use:
-- format CSVs in input folder as follows: "cure-condition_agent-loading_time-in-s.csv", e.g. "laser-15W/cm2_5e-3-CB_20.csv"
-- run scripts 1, 2, and 3 in order, using the file associated with each output in the following script
-  - functionality was segmented for debugging purposes but the separate outputs are also valuable independently and allow for more flexibility in  case-by-case analysis (you can try running from main.py but that will likely go unmaintained as of the implementation of kinetic fitting)
+1. format CSVs in input folder as follows: "cure-condition_agent-loading_time-in-s.csv", e.g. "laser-15W/cm2_5e-3-CB_20.csv"
+2. run scripts 1, 2, and 3 in order, using the file associated with each output in the following script
+
+### notes
+- cure extent determined through Si-H band pseudo-voigt amplitude
+- functionality was segmented for debugging purposes but the separate outputs are also valuable independently and allow for more flexibility in  case-by-case analysis (you can try running from main.py but that will likely go unmaintained as of the implementation of kinetic fitting)
 - caveats for measurement:
   - use spectra with the same number of samples across all files in a folder--i.e., files from varied wavelength ranges or resolutions are currently unsupported
   - be sure to include at least the baseline, normalization, and Si-H wavenumbers in the measurement (as of 8/22/23 meaning 1260 cm-1 to 3600 cm-1)
