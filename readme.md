@@ -1,8 +1,15 @@
 # IR CSV PDMS Kinetics Extractor
 
-![spectra](exports\laser-loading-time-spectra.png "Lased PDMS: loading vs time spectra")
+Works in (3) steps:
+1. accepts the path a folder of raw IR data CSV files, applies normalization and baseline correction, consolidates data and exports to a single separate CSV file, and graphically previews the original vs corrected spectra
 
-![scatter](exports\laser-loading-time-scatterfit.jpg "Lased PDMS: loading vs time scatterfit")
+2. accepts the path to the file exported from the 1st script, determines Si-H band value through pseudo-voigt fit, exports the values to a separate CSV file, and graphically previews the peek fit amplitude values vs time as well as printing the the pseudo-voigt fit parameters
+
+3. accepts the path to the file exported from the 2nd script and plots kinetic model fits to the Si-H peak values
+
+![spectra](exports\images\saltplate_normalized_integration_comparison1.png "normalized salt plate time-cure bar graph comparison")
+
+![scatter](exports\images\10A_5ppt-vs-0-vs-time_kinetics_scatter.png "Lased PDMS: loading vs time kinetic model scatterfit")
 
 ## to use:
 1. format CSVs in input folder as follows: "cure-condition_agent-loading_time-in-s.csv", e.g. "laser-15W/cm2_5e-3-CB_20.csv"

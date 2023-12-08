@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from main import WN_to_Index, SpectraCorrection, Extract_Filename_Metadata, Get_Convention, Get_Gradient_Color
 
+"""
+step 1: takes raw IR data, applies corrections, consolidates to a single CSV, previews the changes before moving on
+"""
+
 def interpolate_to_common_wn(df, common_wn):
     """
     Interpolates the dataframe to a common set of wavenumbers.
@@ -82,5 +86,5 @@ def Consolidate_And_Plot_Spectra(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath = r"CSVs\230831_cb-cure-crazy-long-scan-cure-extent-compare"
+readpath = r"CSVs\231208_4xCB-loading_ambient-cure"
 Consolidate_And_Plot_Spectra(readpath)
