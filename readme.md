@@ -1,6 +1,11 @@
 # IR CSV PDMS Kinetics Extractor
 
-Works in (3) steps:
+## immediate to-do
+- [ ] modify to correct for tilt before baseline correction
+- [ ] find out why current naming convention isn't identified in color selection
+
+## breakdown of 3-step script usage
+
 1. accepts the path a folder of raw IR data CSV files, applies normalization and baseline correction, consolidates data and exports to a single separate CSV file, and graphically previews the original vs corrected spectra
 
 2. accepts the path to the file exported from the 1st script, determines Si-H band value through pseudo-voigt fit, exports the values to a separate CSV file, and graphically previews the peek fit amplitude values vs time as well as printing the the pseudo-voigt fit parameters
@@ -12,10 +17,11 @@ Works in (3) steps:
 ![scatter](exports\images\10A_5ppt-vs-0-vs-time_kinetics_scatter.png "Lased PDMS: loading vs time kinetic model scatterfit")
 
 ## to use:
-1. format CSVs in input folder as follows: "cure-condition_agent-loading_time-in-s.csv", e.g. "laser-15W/cm2_5e-3-CB_20.csv"
+1. format CSVs in input folder as follows: "cure-condition_agent-loading_time-unit.csv", e.g. "laser-15Wcm2_CB-5e-3_20-h.csv"
 2. run scripts 1, 2, and 3 in order, using the file associated with each output in the following script
 
 ### notes
+- shared functions found in the 'main.py' script
 - cure extent determined through Si-H band pseudo-voigt amplitude
 - functionality was segmented for debugging purposes but the separate outputs are also valuable independently and allow for more flexibility in  case-by-case analysis (you can try running from main.py but that will likely go unmaintained as of the implementation of kinetic fitting)
 - caveats for measurement:
@@ -29,6 +35,8 @@ Works in (3) steps:
 - Si-H integration vs time kinetics-fit scatterplot
 
 ## dev to-do
+ - 231208 data: didn't consider loading % vs fraction, fix these and standardize naming convention (add salt plate condition, get times in standard length, etc.)
+   - modify script to extract time units from name (currently assumes seconds but this script uses hours)
  - confirm refactor usability
  - standardize the input csv convention (working version: "condition_time-in-s.csv", e.g. "5e-3_20.csv")
  - change the peak integration script to output a simplified format: time, condition 1, condition 2, etc.

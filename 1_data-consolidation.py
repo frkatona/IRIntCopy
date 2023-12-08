@@ -51,7 +51,7 @@ def Consolidate_And_Plot_Spectra(readpath):
 
     num_samples = len(filelist)
     for i, file in enumerate(filelist):
-        cure_condition, agent_loading, time_in_seconds = Extract_Filename_Metadata(file)
+        cure_condition, agent_identity, agent_loading, time_value, time_units = Extract_Filename_Metadata(file)
         columnname = os.path.splitext(file)[0]
 
         # read and correct
@@ -64,8 +64,9 @@ def Consolidate_And_Plot_Spectra(readpath):
         df_tot[columnname] = wn_corrected
 
         # conditional formatting
-        base_color = Get_Convention('agent-loading', agent_loading)
-        color = Get_Gradient_Color(base_color, 1 - i/num_samples)  # Note the "1 -" to invert the color gradient
+        print(agent_identity + '-' + agent_loading)
+        base_color = Get_Convention('agent-loading', agent_identity + '-' + agent_loading)
+        color = 'r' #Get_Gradient_Color(base_color, 1 - i/num_samples)  # Note the "1 -" to invert the color gradient
         df_add.plot('cm-1', columnname, ax=ax_raw, color=color)
         df_tot.plot('cm-1', columnname, ax=ax_corrected, color=color)
 
@@ -75,7 +76,7 @@ def Consolidate_And_Plot_Spectra(readpath):
 
     # Export consolidated dataframe to CSV
     script_directory = os.path.dirname(os.path.realpath(__file__))
-    exports_directory = os.path.join(script_directory, "exports")
+    exports_directory = os.path.join(script_directory, "exports\CSV_exports")
     filename = os.path.basename(readpath) + "_consolidated.csv"
     writepath = os.path.join(exports_directory, filename)
 
@@ -86,5 +87,5 @@ def Consolidate_And_Plot_Spectra(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath = r"CSVs\231208_4xCB-loading_ambient-cure"
+readpath = r"CSVs\231208_4xCB-loading_KBrTransmission_ambient-cure"
 Consolidate_And_Plot_Spectra(readpath)

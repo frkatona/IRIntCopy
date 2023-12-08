@@ -87,10 +87,23 @@ def Extract_Filename_Metadata(file):
     '''Extract metadata formattted as "cure-condition_agent-loading_time-in-s.csv", e.g. "laser-15W/cm2_5e-3-CB_20.csv"'''
     filename_metadata = file[:-4].split("_")
     cure_condition = filename_metadata[0]
-    agent_loading = filename_metadata[1]
-    time_in_seconds = filename_metadata[2]
+
+    agent = filename_metadata[1]
+    agent_identity = agent.split("-")[0]
+    if len(agent.split("-")) == 2:
+        agent_loading = agent.split("-")[1]
+    elif len(agent.split("-")) == 3:
+        agent_loading = agent.split("-")[1] + "-" + agent.split("-")[2]  # e.g. 5e-3
+    else:
+        print("Error: 'agent' metadata not formatted for expected 2 or 3 '-' split")
+        return None
+
+
+    time = filename_metadata[2]
+    time_value = time.split("-")[0]
+    time_units = time.split("-")[1]
     # time = ''.join(filter(str.isdigit, time_in_seconds))
-    return cure_condition, agent_loading, time_in_seconds
+    return cure_condition, agent_identity, agent_loading, time_value, time_units
 
 ##----------------------------MAIN CODE START----------------------------##
 def main():
