@@ -16,6 +16,8 @@ conventions = {
         'no-agent': '#FFA500', # orange
         'AuNP': '#FF0000', # red
         ## blues for CB
+        'CB-0': '#FFA500', # orange
+        'CB-1e+1': '#52B2BF', # sapphire
         'CB-1e-2': '#281E5D', # indigo
         'CB-1e-3': '#281E5D', # indigo again
         'CB-1e-4': '#0A1172', # navy
@@ -48,19 +50,30 @@ def WN_to_Index(wn_array, wn):
     difference_array = np.absolute(wn_array - wn)
     return difference_array.argmin()
 
-def SpectraCorrection(wn_raw, index_baseline_low, index_baseline_high, index_normal_low, index_normal_high):
+def SpectraCorrection(wn_raw, index_baseline_1_low, index_baseline_1_high, index_baseline_2_low, index_baseline_2_high, index_normal_low, index_normal_high):
     '''Corrects spectra for baseline drift and normalizes the data'''
-    ## converts to absorbance if max value suggests spectra is in transmittance
+    # Converts to absorbance if max value suggests spectra is in transmittance
     if wn_raw.max() > 60: 
         wn_raw /= 100
         wn_raw += 1e-10 
         wn_raw = np.log10(wn_raw) * -1
 
-    ## baseline correction
-    baseline_diff = wn_raw[index_baseline_low:index_baseline_high].mean() 
-    wn_corrected = wn_raw - baseline_diff
+    # Average baseline correction for early and late sections
+    baseline_1_avg = wn_raw[index_baseline_1_low:index_baseline_1_high].mean()
+    baseline_2_avg = wn_raw[index_baseline_2_low:index_baseline_2_high].mean()
 
-    # normalization
+    # Calculate the slope of the baseline between the low and high baseline avg points
+    m = (baseline_2_avg - baseline_1_avg) / (index_baseline_2_high - index_baseline_1_low)
+
+    # create an array of baseline values using the slope and the low baseline avg point that spans the entire spectra
+    b = baseline_1_avg - m * index_baseline_1_low
+    baseline_y = np.array(m * np.arange(len(wn_raw)) + b)
+    
+
+    # subtract the baseline from the spectra
+    wn_corrected = wn_raw - baseline_y
+
+    # Normalization
     wn_norm = wn_corrected[index_normal_low:index_normal_high].mean() 
     wn_corrected /= wn_norm
 
@@ -103,6 +116,8 @@ def Extract_Filename_Metadata(file):
     time_value = time.split("-")[0]
     time_units = time.split("-")[1]
     # time = ''.join(filter(str.isdigit, time_in_seconds))
+
+    # print(cure_condition, agent_identity, agent_loading, time_value, time_units)
     return cure_condition, agent_identity, agent_loading, time_value, time_units
 
 ##----------------------------MAIN CODE START----------------------------##

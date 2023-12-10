@@ -36,12 +36,15 @@ def Consolidate_And_Plot_Spectra(readpath):
 
     # define wavenumber regions of interest (normalization, baseline correction, and peak integration)
     wn_normal_low, wn_normal_high = 1260, 1263
-    wn_baseline_low, wn_baseline_high = 3400, 3600
+    wn_baseline_1_low, wn_baseline_1_high = 930, 940
+    wn_baseline_2_low, wn_baseline_2_high = 3400, 3600
 
     # convert wavenumbers to indices
     wn_array = df_tot['cm-1'].to_numpy()
-    index_baseline_low = WN_to_Index(wn_array, wn_baseline_low)
-    index_baseline_high = WN_to_Index(wn_array, wn_baseline_high)
+    index_baseline_1_low = WN_to_Index(wn_array, wn_baseline_1_low)
+    index_baseline_1_high = WN_to_Index(wn_array, wn_baseline_1_high)
+    index_baseline_2_low = WN_to_Index(wn_array, wn_baseline_2_low)
+    index_baseline_2_high = WN_to_Index(wn_array, wn_baseline_2_high)
     index_normal_low = WN_to_Index(wn_array, wn_normal_low)
     index_normal_high = WN_to_Index(wn_array, wn_normal_high)
 
@@ -58,7 +61,7 @@ def Consolidate_And_Plot_Spectra(readpath):
         df_add = pd.read_csv(file, skiprows=2, header=None, names=['cm-1', columnname])
         df_add = df_add.sort_values(by=['cm-1'], ignore_index=True)
         wn_raw = df_add[columnname].to_numpy()
-        wn_corrected = SpectraCorrection(wn_raw, index_baseline_low, index_baseline_high, index_normal_low, index_normal_high)
+        wn_corrected = SpectraCorrection(wn_raw, index_baseline_1_low, index_baseline_1_high, index_baseline_2_low, index_baseline_2_high, index_normal_low, index_normal_high)
 
         # store corrected values in dataframe
         df_tot[columnname] = wn_corrected
@@ -66,7 +69,8 @@ def Consolidate_And_Plot_Spectra(readpath):
         # conditional formatting
         print(agent_identity + '-' + agent_loading)
         base_color = Get_Convention('agent-loading', agent_identity + '-' + agent_loading)
-        color = 'r' #Get_Gradient_Color(base_color, 1 - i/num_samples)  # Note the "1 -" to invert the color gradient
+        print(agent_identity + '-' + agent_loading)
+        color = Get_Gradient_Color(base_color, 1 - i/num_samples)  # Note the "1 -" to invert the color gradient
         df_add.plot('cm-1', columnname, ax=ax_raw, color=color)
         df_tot.plot('cm-1', columnname, ax=ax_corrected, color=color)
 
