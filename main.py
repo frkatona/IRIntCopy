@@ -98,7 +98,7 @@ def Peak_Integration(wn_corrected, wn_array, wn_low, wn_high):
 
 def Extract_Filename_Metadata(file):
     '''Extract metadata formattted as "cure-condition_agent-loading_time-in-s.csv", e.g. "laser-15W/cm2_5e-3-CB_20.csv"'''
-    filename_metadata = file[:-4].split("_")
+    filename_metadata = file.split("_")
     cure_condition = filename_metadata[0]
 
     agent = filename_metadata[1]
@@ -117,7 +117,6 @@ def Extract_Filename_Metadata(file):
     time_units = time.split("-")[1]
     # time = ''.join(filter(str.isdigit, time_in_seconds))
 
-    # print(cure_condition, agent_identity, agent_loading, time_value, time_units)
     return cure_condition, agent_identity, agent_loading, time_value, time_units
 
 ##----------------------------MAIN CODE START----------------------------##

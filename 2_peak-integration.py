@@ -5,11 +5,16 @@ import os
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks, peak_widths
 import numpy as np
-from main import Peak_Integration, Get_Convention, Get_Gradient_Color
+from main import Peak_Integration, Get_Convention, Get_Gradient_Color, Extract_Filename_Metadata
 
 """
-next up: organize the bars by loading and time
+step 2: 
+takes corrected IR spectra,
+fits peak of interest to pseudo-voigt,
+extracts/exports peak-wing difference,
+generates two plots: the psuedo-voigt scatterfit and the peak-wing values bar graph
 """
+
 # Pseudo-Voigt Function
 def pseudo_voigt(x, A, mu, sigma, gamma, eta):
     gaussian = (1 - eta) * np.exp(-((x - mu)**2) / (2 * sigma**2))
@@ -25,19 +30,23 @@ def Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath):
     peak_stop = 2225
     df_subset = df_tot[(df_tot['cm-1'] >= peak_start) & (df_tot['cm-1'] <= peak_stop)]
     
-    # Initialize a dictionary to store fit parameters and 'Peak-Wing Difference' for each dataset
+    # Initialize a dictionary to store fit parameters, 'Peak-Wing Difference', and metadata for each dataset
     fit_params_dict = {}
     peak_wing_diff_dict = {}
+    metadata_dict = {}
     
-    # Plot initialization for Pseudo-Voigt fit
-    plt.figure(figsize=(14, 8))
+    # Extract and sort the metadata
+    for columnname in df_subset.columns[1:]:
+        metadata = Extract_Filename_Metadata(columnname)
+        if metadata is not None:
+            _, _, agent_loading, time_value, _ = metadata
+            metadata_dict[columnname] = (agent_loading, float(time_value))
     
-    # Create a color map
-    n = len(df_subset.columns[1:])  # Number of datasets
-    colors = cm.Reds(np.linspace(0.2, 0.8, n))  # Generate colors from the Reds colormap
+    # Sort columns based on metadata (agent_loading and time_value)
+    sorted_columns = sorted(metadata_dict, key=lambda x: (metadata_dict[x][0], metadata_dict[x][1]))
 
-    # Fit the Pseudo-Voigt function to each dataset
-    for i, (columnname, color) in enumerate(zip(df_subset.columns[1:], colors)):
+    # Fit the Pseudo-Voigt function to each dataset in the order of sorted_columns
+    for i, columnname in enumerate(sorted_columns):
         y_data = df_subset[columnname].to_numpy()
         x_data = df_subset['cm-1'].to_numpy()
         
@@ -72,93 +81,70 @@ def Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath):
         peak_wing_diff = peak_max - wing_min
         peak_wing_diff_dict[columnname] = peak_wing_diff
         
-        # Plot the original data and fitted curve using the same color
-        plt.plot(x_data, y_data, label=f'Original - {columnname}', color=color)
-        plt.plot(x_data, fitted_y, linestyle='--', label=f'Fitted - {columnname}', color=color)
-        
+        # Plot the original data and fitted curve
+        plt.plot(x_data, y_data, label=f'Original - {columnname}', color='skyblue')
+        plt.plot(x_data, fitted_y, linestyle='--', label=f'Fitted - {columnname}', color='navy')
+
     plt.xlabel('Wavenumber (cm-1)', fontsize=14)
     plt.ylabel('Absorbance', fontsize=14)
     plt.title('Pseudo-Voigt Fit', fontsize=16)
     plt.legend()
     plt.grid(True)
-    
+
     print("Fit Parameters: [A, mu, sigma, gamma, eta]")
     for key, value in fit_params_dict.items():
         print(f"{key}: {value}")
+
+    # Creating the DataFrame for the plot
+    peak_wing_diff_df = pd.DataFrame([(col, peak_wing_diff_dict[col], *metadata_dict[col]) for col in sorted_columns], columns=['Sample', 'Amplitude', 'Agent Loading', 'Time Value'])
     
-    # Create DataFrame from the 'Peak-Wing Difference' dictionary
-    peak_wing_diff_df = pd.DataFrame(list(peak_wing_diff_dict.items()), columns=['Sample', 'Peak-Wing Difference'])
+    # Sort the DataFrame by agent loading and time value
+    peak_wing_diff_df.sort_values(by=['Sample'], key=lambda x: x.map(metadata_dict.get), inplace=True)
     
-    # Plot the bar graph for 'Peak-Wing Difference'
+    # Export the DataFrame to a CSV
+    base_name = os.path.basename(readpath)
+    name_without_extension = os.path.splitext(base_name)[0]
+    new_name = f"{name_without_extension}_PV-Amplitudes.csv"
+    writepath = os.path.join(os.path.dirname(readpath), new_name)
+    peak_wing_diff_df.to_csv(writepath, index=False)
+
+    # Assign unique colors to each loading value
+    loading_values = [metadata_dict[col][0] for col in peak_wing_diff_df['Sample']]
+    unique_loadings = list(set(loading_values))
+    color_map = cm.get_cmap('tab10', len(unique_loadings))
+    loading_color_dict = dict(zip(unique_loadings, color_map(range(len(unique_loadings)))))
+    bar_colors = [loading_color_dict[loading] for loading in loading_values]
+
+    # Plot the bar graph for 'Peak-Wing Difference' with different colors for each loading value
     plt.figure(figsize=(14, 8))
-    plt.bar(peak_wing_diff_df['Sample'], peak_wing_diff_df['Peak-Wing Difference'], color='skyblue', edgecolor='black')
+    plt.bar(peak_wing_diff_df['Sample'], peak_wing_diff_df['Amplitude'], color=bar_colors, edgecolor='black')
     plt.xlabel('Sample', fontsize=14)
     plt.ylabel('Peak-Wing Difference', fontsize=14)
-    plt.title('Peak-Wing Difference for Each Sample', fontsize=16)
+    plt.title('Peak-Wing Difference for Each Sample Sorted by Agent Loading and Time', fontsize=16)
     plt.xticks(rotation=30)
     plt.grid(True, axis='y')
     
+    # plot a scatterplot of the peak-wing-difference values as a function of time (x-axis) and agent loading (color)
+    plt.figure(figsize=(14, 8))
+    plt.scatter(peak_wing_diff_df['Time Value'], peak_wing_diff_df['Amplitude'], c=bar_colors, edgecolor='black')
+    # Plot each loading value separately
+    for loading in unique_loadings:
+        loading_indices = [i for i, val in enumerate(loading_values) if val == loading]
+        loading_time_values = peak_wing_diff_df.loc[loading_indices, 'Time Value']
+        loading_amplitudes = peak_wing_diff_df.loc[loading_indices, 'Amplitude']
+        loading_color = loading_color_dict[loading]  # Get the color for the loading value
+        plt.plot(loading_time_values, loading_amplitudes, label=f'Loading: {loading}', linewidth=1, color=loading_color)
+
+    plt.xlabel('Time (h)', fontsize=14)
+    plt.legend()
+    plt.ylabel('Peak-Wing Difference', fontsize=14)
+    plt.title('Peak-Wing Difference vs Time', fontsize=16)
+    plt.xticks(rotation=30)
+    plt.grid(True, axis='y')
+
     plt.show()
-
-def Integrate_And_Plot_Bar_Graph(readpath):
-    # Load consolidated spectra from the CSV generated by the first script
-    df_tot = pd.read_csv(readpath)
-
-    # Define wavenumber regions of interest for peak integration
-    wn_low = [780, 830, 970, 2100, 2930, 3060]
-    wn_high = [830, 930, 1150, 2225, 3000, 3080]
-    groupname = ['Si-CH3', 'Si-H (bend)', 'Si-O-Si', 'Si-H (stretch)', 'CH3', 'vinyl (C=C)']
-
-    # Create a dataframe to store peak areas
-    df_area = pd.DataFrame(index=groupname)
-
-    # Convert wavenumbers to indices
-    wn_array = df_tot['cm-1'].to_numpy()
-
-    # Plot initialization and color settings
-    color_list = []
-    num_samples = len(df_tot.columns) - 1
-    for i, columnname in enumerate(df_tot.columns[1:]):  # Skip the 'cm-1' column
-        split_columnname = columnname.split("_")
-        if len(split_columnname) == 2:
-            agent_loading, time_in_seconds = columnname.split("_")[0], columnname.split("_")[1]
-        elif len(split_columnname) == 3:
-            _, agent_loading, time_in_seconds = columnname.split("_")[0], columnname.split("_")[1], columnname.split("_")[2]
-        else:
-            print("Error: The column name is not formatted for a 2/3 '_' split")
-            break
-        
-
-        # Integrate the peak areas
-        wn_corrected = df_tot[columnname].to_numpy()
-        area = Peak_Integration(wn_corrected, wn_array, wn_low, wn_high)
-        df_area[columnname] = area
-
-        # Conditional formatting for colors
-        base_color = Get_Convention('agent-loading', agent_loading)
-        try:
-            color = Get_Gradient_Color(base_color, 1 - i/num_samples)
-        except:
-            color = 'black'
-            print(f"Error: {agent_loading} is not a valid agent loading.")
-        color_list.append(color)
-
-    # Plot the bar graph for peak areas
-    ax_area = df_area.plot.bar(title='Peak Areas', rot=30, color=color_list, edgecolor='black', linewidth=1)
-    ax_area.set_title('Peak Areas')
-    plt.show()
-
-
-    # Export the integrated peak areas to a CSV
-    base_name = os.path.basename(readpath)
-    name_without_extension = os.path.splitext(base_name)[0]
-    new_name = f"{name_without_extension}_peak_areas.csv"
-    writepath = os.path.join(os.path.dirname(readpath), new_name)
-    df_area.to_csv(writepath)
 
 ##----------------------------MAIN CODE START----------------------------##
 
-# readpath = r'exports\230831_cb-cure-crazy-long-scan-cure-extent-compare_consolidated.csv'
 readpath = r"exports\CSV_exports\231208_4xCB-loading_KBrTransmission_ambient-cure_consolidated.csv"
 Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath)
-# Integrate_And_Plot_Bar_Graph(readpath)

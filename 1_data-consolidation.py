@@ -6,7 +6,11 @@ import numpy as np
 from main import WN_to_Index, SpectraCorrection, Extract_Filename_Metadata, Get_Convention, Get_Gradient_Color
 
 """
-step 1: takes raw IR data, applies corrections, consolidates to a single CSV, previews the changes before moving on
+step 1: 
+takes raw IR data, 
+applies corrections, 
+consolidates to a single CSV, 
+previews the changes before moving on
 """
 
 def interpolate_to_common_wn(df, common_wn):
@@ -36,7 +40,7 @@ def Consolidate_And_Plot_Spectra(readpath):
 
     # define wavenumber regions of interest (normalization, baseline correction, and peak integration)
     wn_normal_low, wn_normal_high = 1260, 1263
-    wn_baseline_1_low, wn_baseline_1_high = 930, 940
+    wn_baseline_1_low, wn_baseline_1_high = 1330, 1340
     wn_baseline_2_low, wn_baseline_2_high = 3400, 3600
 
     # convert wavenumbers to indices
@@ -54,7 +58,7 @@ def Consolidate_And_Plot_Spectra(readpath):
 
     num_samples = len(filelist)
     for i, file in enumerate(filelist):
-        cure_condition, agent_identity, agent_loading, time_value, time_units = Extract_Filename_Metadata(file)
+        cure_condition, agent_identity, agent_loading, time_value, time_units = Extract_Filename_Metadata(file[:-4])
         columnname = os.path.splitext(file)[0]
 
         # read and correct
