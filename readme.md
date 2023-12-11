@@ -1,8 +1,10 @@
 # IR CSV PDMS Kinetics Extractor
 
 ## immediate to-do
-- [ ] modify to correct for tilt before baseline correction
-- [ ] find out why current naming convention isn't identified in color selection
+- [ ] see with Ben if the baseline correction should correct for the baseline bowing and if I should, idk, find a function that minimizes the wings of certain peaks that are unlikely to correspond to CB directly?  Pull in the CB IR spectra
+- [ ] consider retrying but with the new salt plates
+- [x] modify to correct for tilt before baseline correction
+- [x] find out why current naming convention isn't identified in color selection
 
 ## breakdown of 3-step script usage
 

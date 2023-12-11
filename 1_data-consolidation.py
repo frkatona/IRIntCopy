@@ -41,7 +41,7 @@ def Consolidate_And_Plot_Spectra(readpath):
     # define wavenumber regions of interest (normalization, baseline correction, and peak integration)
     wn_normal_low, wn_normal_high = 1260, 1263
     wn_baseline_1_low, wn_baseline_1_high = 1330, 1340
-    wn_baseline_2_low, wn_baseline_2_high = 3400, 3600
+    wn_baseline_2_low, wn_baseline_2_high = 3250, 3300
 
     # convert wavenumbers to indices
     wn_array = df_tot['cm-1'].to_numpy()
@@ -71,9 +71,7 @@ def Consolidate_And_Plot_Spectra(readpath):
         df_tot[columnname] = wn_corrected
 
         # conditional formatting
-        print(agent_identity + '-' + agent_loading)
         base_color = Get_Convention('agent-loading', agent_identity + '-' + agent_loading)
-        print(agent_identity + '-' + agent_loading)
         color = Get_Gradient_Color(base_color, 1 - i/num_samples)  # Note the "1 -" to invert the color gradient
         df_add.plot('cm-1', columnname, ax=ax_raw, color=color)
         df_tot.plot('cm-1', columnname, ax=ax_corrected, color=color)
