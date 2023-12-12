@@ -17,6 +17,11 @@ extracts/exports peak-wing difference,
 generates two plots: the psuedo-voigt scatterfit and the peak-wing values bar graph
 """
 
+# TODO
+# use the PV scalar instead of the peak-wing difference
+# figure out how PV is going negative because it shouldn't be able to
+# use lmfit for parameter error here as well as script 3
+
 # Pseudo-Voigt Function
 def pseudo_voigt(x, A, mu, sigma, gamma, eta):
     gaussian = (1 - eta) * np.exp(-((x - mu)**2) / (2 * sigma**2))
@@ -127,35 +132,36 @@ def Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath):
     plt.xticks(rotation=30)
     plt.grid(True, axis='y')
     
-    def exponential_decay(x, a, b, c):
-        return a * np.exp(-b * x) + c
+    ## Fit exponential decay to each loading value  ##
 
-    plt.figure(figsize=(14, 8))
-    plt.scatter(peak_wing_diff_df['Time Value'], peak_wing_diff_df['Amplitude'], c=bar_colors, edgecolor='black')
+    # def exponential_decay(x, a, b, c):
+    #     return a * np.exp(-b * x) + c
 
-    # Fit exponential decay to each loading value separately
-    for loading in unique_loadings:
-        loading_indices = [i for i, val in enumerate(loading_values) if val == loading]
-        loading_time_values = peak_wing_diff_df.loc[loading_indices, 'Time Value']
-        loading_amplitudes = peak_wing_diff_df.loc[loading_indices, 'Amplitude']
-        loading_color = loading_color_dict[loading]  # Get the color for the loading value
+    # plt.figure(figsize=(14, 8))
+    # plt.scatter(peak_wing_diff_df['Time Value'], peak_wing_diff_df['Amplitude'], c=bar_colors, edgecolor='black')
 
-        # Perform curve fitting
-        params, _ = curve_fit(exponential_decay, loading_time_values, loading_amplitudes)
+    # for loading in unique_loadings:
+    #     loading_indices = [i for i, val in enumerate(loading_values) if val == loading]
+    #     loading_time_values = peak_wing_diff_df.loc[loading_indices, 'Time Value']
+    #     loading_amplitudes = peak_wing_diff_df.loc[loading_indices, 'Amplitude']
+    #     loading_color = loading_color_dict[loading]  # Get the color for the loading value
 
-        # Generate fitted curve with more samples
-        dense_time_values = np.linspace(min(loading_time_values), max(loading_time_values), 100)
-        fitted_curve = exponential_decay(dense_time_values, *params)
+    #     # Perform curve fitting
+    #     params, _ = curve_fit(exponential_decay, loading_time_values, loading_amplitudes)
 
-        # Plot fitted curve
-        plt.plot(dense_time_values, fitted_curve, label=f'Loading: {loading}', linewidth=1, color=loading_color)
+    #     # Generate fitted curve with more samples
+    #     dense_time_values = np.linspace(min(loading_time_values), max(loading_time_values), 100)
+    #     fitted_curve = exponential_decay(dense_time_values, *params)
 
-    plt.xlabel('Time (h)', fontsize=14)
-    plt.legend()
-    plt.ylabel('Peak-Wing Difference', fontsize=14)
-    plt.title('Peak-Wing Difference vs Time', fontsize=16)
-    plt.xticks(rotation=30)
-    plt.grid(True, axis='y')
+    #     # Plot fitted curve
+    #     plt.plot(dense_time_values, fitted_curve, label=f'Loading: {loading}', linewidth=1, color=loading_color)
+
+    # plt.xlabel('Time (h)', fontsize=14)
+    # plt.legend()
+    # plt.ylabel('Peak-Wing Difference', fontsize=14)
+    # plt.title('Peak-Wing Difference vs Time', fontsize=16)
+    # plt.xticks(rotation=30)
+    # plt.grid(True, axis='y')
 
     plt.show()
 

@@ -13,6 +13,8 @@ consolidates to a single CSV,
 previews the changes before moving on
 """
 
+# use polynomial baseline
+
 def interpolate_to_common_wn(df, common_wn):
     """
     Interpolates the dataframe to a common set of wavenumbers.
