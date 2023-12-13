@@ -3,7 +3,9 @@ import glob
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from main import WN_to_Index, SpectraCorrection, Extract_Filename_Metadata, Get_Convention, Get_Gradient_Color
+from main import WN_to_Index, Extract_Filename_Metadata, Get_Convention, Get_Gradient_Color
+from numpy.polynomial.polynomial import Polynomial
+
 
 """
 step 1: 
@@ -13,8 +15,6 @@ consolidates to a single CSV,
 previews the changes before moving on
 """
 
-# use polynomial baseline
-
 def interpolate_to_common_wn(df, common_wn):
     """
     Interpolates the dataframe to a common set of wavenumbers.
@@ -23,6 +23,34 @@ def interpolate_to_common_wn(df, common_wn):
     df_interpolated = df.set_index('cm-1').reindex(common_wn).interpolate(method='linear').reset_index()
     df_interpolated.columns = ['cm-1'] + list(df.columns[1:])
     return df_interpolated
+
+def SpectraCorrection(wn_raw, index_baseline_1_low, index_baseline_1_high, index_baseline_2_low, index_baseline_2_high, index_normal_low, index_normal_high):
+    '''Corrects spectra for baseline drift and normalizes the data'''
+    # Converts to absorbance if max value suggests spectra is in transmittance
+    if wn_raw.max() > 60: 
+        wn_raw /= 100
+        wn_raw += 1e-10 
+        wn_raw = np.log10(wn_raw) * -1
+
+    # Average baseline correction for early and late sections
+    baseline_1_avg = wn_raw[index_baseline_1_low:index_baseline_1_high].mean()
+    baseline_2_avg = wn_raw[index_baseline_2_low:index_baseline_2_high].mean()
+
+    # Calculate the slope of the baseline between the low and high baseline avg points
+    m = (baseline_2_avg - baseline_1_avg) / (index_baseline_2_high - index_baseline_1_low)
+
+    # create an array of baseline values using the slope and the low baseline avg point that spans the entire spectra
+    b = baseline_1_avg - m * index_baseline_1_low
+    baseline_y = np.array(m * np.arange(len(wn_raw)) + b)
+    
+    # subtract the baseline from the spectra
+    wn_corrected = wn_raw - baseline_y
+
+    # Normalization
+    wn_norm = wn_corrected[index_normal_low:index_normal_high].mean() 
+    wn_corrected /= wn_norm
+
+    return wn_corrected
 
 def Consolidate_And_Plot_Spectra(readpath):
     os.chdir(readpath)
