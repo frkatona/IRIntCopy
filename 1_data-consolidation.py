@@ -4,8 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from main import WN_to_Index, Extract_Filename_Metadata, Get_Convention, Get_Gradient_Color
-from numpy.polynomial.polynomial import Polynomial
-
+from numpy.polynomial import Polynomial
 
 """
 step 1: 
@@ -14,6 +13,9 @@ applies corrections,
 consolidates to a single CSV, 
 previews the changes before moving on
 """
+
+# smooth view
+# double check the bowing is eradicated (and separately show baseline alone and print the baseline fit equation)
 
 def interpolate_to_common_wn(df, common_wn):
     """
@@ -24,33 +26,53 @@ def interpolate_to_common_wn(df, common_wn):
     df_interpolated.columns = ['cm-1'] + list(df.columns[1:])
     return df_interpolated
 
-def SpectraCorrection(wn_raw, index_baseline_1_low, index_baseline_1_high, index_baseline_2_low, index_baseline_2_high, index_normal_low, index_normal_high):
+def SpectraCorrection(data):
     '''Corrects spectra for baseline drift and normalizes the data'''
     # Converts to absorbance if max value suggests spectra is in transmittance
-    if wn_raw.max() > 60: 
-        wn_raw /= 100
-        wn_raw += 1e-10 
-        wn_raw = np.log10(wn_raw) * -1
+    if data.iloc[:,1].max() > 60: 
+        data /= 100
+        data += 1e-10 
+        data = np.log10(data) * -1
 
-    # Average baseline correction for early and late sections
-    baseline_1_avg = wn_raw[index_baseline_1_low:index_baseline_1_high].mean()
-    baseline_2_avg = wn_raw[index_baseline_2_low:index_baseline_2_high].mean()
+    def process_wavenumber(wavenumber, data, window=5):
+        """
+        Find the minimum value within `window` indices of a given wavenumber and average it
+        with the four values surrounding it.
+        """
+        closest_index = np.abs(data['cm-1'] - wavenumber).idxmin()
+        start_index = max(closest_index - window, 0)
+        end_index = min(closest_index + window, len(data) - 1)
+        min_index = data.iloc[:,1][start_index:end_index].idxmin()
+        avg_start_index = max(min_index - 2, 0)
+        avg_end_index = min(min_index + 2, len(data) - 1)
+        return data.iloc[:,1][avg_start_index:avg_end_index + 1].mean()
 
-    # Calculate the slope of the baseline between the low and high baseline avg points
-    m = (baseline_2_avg - baseline_1_avg) / (index_baseline_2_high - index_baseline_1_low)
+    def CalculateBaseline(data, wavenumbers):
+        """
+        Apply baseline correction to the dataframe using the specified wavenumbers.
+        """
+        processed_values = {wn: process_wavenumber(wn, data) for wn in wavenumbers}
+        p = Polynomial.fit(list(processed_values.keys()), list(processed_values.values()), 2)
+        print(p)
+        return p(data['cm-1'])
 
-    # create an array of baseline values using the slope and the low baseline avg point that spans the entire spectra
-    b = baseline_1_avg - m * index_baseline_1_low
-    baseline_y = np.array(m * np.arange(len(wn_raw)) + b)
+    def normalize_spectrum(data, corrected_absorbance, start_wn, end_wn):
+        """
+        Normalize the spectrum to the maximum absorbance value in the specified range.
+        """
+        max_absorbance = data[(data['cm-1'] >= start_wn) & (data['cm-1'] <= end_wn)][data.columns[1]].max()
+        return corrected_absorbance / max_absorbance
+
+    wavenumbers = [1338, 1512, 1870, 2028, 2256, 2422, 2460, 2600, 2727, 3200, 3300, 3900, 4000]
     
-    # subtract the baseline from the spectra
-    wn_corrected = wn_raw - baseline_y
+    # Apply baseline correction
+    baseline = CalculateBaseline(data, wavenumbers)
+    corrected_absorbance = data.iloc[:,1] - baseline
 
-    # Normalization
-    wn_norm = wn_corrected[index_normal_low:index_normal_high].mean() 
-    wn_corrected /= wn_norm
+    # Normalize the spectrum
+    normalized_corrected_absorbance = normalize_spectrum(data, corrected_absorbance, 1255, 1270)
 
-    return wn_corrected
+    return normalized_corrected_absorbance, baseline
 
 def Consolidate_And_Plot_Spectra(readpath):
     os.chdir(readpath)
@@ -93,9 +115,9 @@ def Consolidate_And_Plot_Spectra(readpath):
 
         # read and correct
         df_add = pd.read_csv(file, skiprows=2, header=None, names=['cm-1', columnname])
-        df_add = df_add.sort_values(by=['cm-1'], ignore_index=True)
-        wn_raw = df_add[columnname].to_numpy()
-        wn_corrected = SpectraCorrection(wn_raw, index_baseline_1_low, index_baseline_1_high, index_baseline_2_low, index_baseline_2_high, index_normal_low, index_normal_high)
+        df_add = df_add.sort_values(by=['cm-1'], ignore_index=True)    
+
+        wn_corrected, baseline = SpectraCorrection(df_add)
 
         # store corrected values in dataframe
         df_tot[columnname] = wn_corrected
@@ -106,9 +128,8 @@ def Consolidate_And_Plot_Spectra(readpath):
         df_add.plot('cm-1', columnname, ax=ax_raw, color=color)
         df_tot.plot('cm-1', columnname, ax=ax_corrected, color=color)
 
-    # plot formatting for SPECTRA (RAW) and SPECTRA (CORRECTED)
+    # plot formatting for SPECTRA (RAW)
     ax_raw.set_title('Raw Spectra')
-    ax_corrected.set_title('Corrected Spectra')
 
     # Export consolidated dataframe to CSV
     script_directory = os.path.dirname(os.path.realpath(__file__))
@@ -117,6 +138,11 @@ def Consolidate_And_Plot_Spectra(readpath):
     writepath = os.path.join(exports_directory, filename)
 
     df_tot.to_csv(writepath, index=False)
+
+    # Plot the baseline
+    fig_baseline, ax_baseline = plt.subplots()
+    ax_baseline.plot(df_tot['cm-1'], baseline, color='black')
+    ax_baseline.set_title('Baseline')
 
     plt.show()
 

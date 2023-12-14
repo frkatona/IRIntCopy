@@ -65,7 +65,7 @@ def Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath):
         
         # Perform curve fitting
         params, _ = curve_fit(pseudo_voigt, x_data, y_data, p0=initial_guess)
-        
+                
         # Store the fit parameters
         fit_params_dict[columnname] = params
         
@@ -131,37 +131,6 @@ def Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath):
     plt.title('Peak-Wing Difference for Each Sample Sorted by Agent Loading and Time', fontsize=16)
     plt.xticks(rotation=30)
     plt.grid(True, axis='y')
-    
-    ## Fit exponential decay to each loading value  ##
-
-    # def exponential_decay(x, a, b, c):
-    #     return a * np.exp(-b * x) + c
-
-    # plt.figure(figsize=(14, 8))
-    # plt.scatter(peak_wing_diff_df['Time Value'], peak_wing_diff_df['Amplitude'], c=bar_colors, edgecolor='black')
-
-    # for loading in unique_loadings:
-    #     loading_indices = [i for i, val in enumerate(loading_values) if val == loading]
-    #     loading_time_values = peak_wing_diff_df.loc[loading_indices, 'Time Value']
-    #     loading_amplitudes = peak_wing_diff_df.loc[loading_indices, 'Amplitude']
-    #     loading_color = loading_color_dict[loading]  # Get the color for the loading value
-
-    #     # Perform curve fitting
-    #     params, _ = curve_fit(exponential_decay, loading_time_values, loading_amplitudes)
-
-    #     # Generate fitted curve with more samples
-    #     dense_time_values = np.linspace(min(loading_time_values), max(loading_time_values), 100)
-    #     fitted_curve = exponential_decay(dense_time_values, *params)
-
-    #     # Plot fitted curve
-    #     plt.plot(dense_time_values, fitted_curve, label=f'Loading: {loading}', linewidth=1, color=loading_color)
-
-    # plt.xlabel('Time (h)', fontsize=14)
-    # plt.legend()
-    # plt.ylabel('Peak-Wing Difference', fontsize=14)
-    # plt.title('Peak-Wing Difference vs Time', fontsize=16)
-    # plt.xticks(rotation=30)
-    # plt.grid(True, axis='y')
 
     plt.show()
 

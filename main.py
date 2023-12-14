@@ -50,8 +50,6 @@ def WN_to_Index(wn_array, wn):
     difference_array = np.absolute(wn_array - wn)
     return difference_array.argmin()
 
-
-
 def Peak_Integration(wn_corrected, wn_array, wn_low, wn_high):
     '''Integrate peak areas using Simpson's rule approximation'''
     areas = []
