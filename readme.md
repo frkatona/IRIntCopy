@@ -1,8 +1,10 @@
 # IR CSV PDMS Kinetics Extractor
 
 ## to-do
+- [ ] add error bars to kinetic model fit
 - [ ] maintain time clustering in script 2's bar graph but sort by loading low to high
-- [ ] keep colors consistent across scripts
+- [ ] finalize plot formatting and consistency (colors, titles, font, size, gridlines, etc.)
+- [ ] try plotly graph replacements
 - [x] use the PV scalar instead of the peak-wing difference
 - [x] use lmfit to more easily extract error on the fit here as well as script 3
 - [x] add error bars from lmfit to bar graph
