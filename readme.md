@@ -1,10 +1,10 @@
 # IR CSV PDMS Kinetics Extractor
 
 ## to-do
-- [ ] add error bars to kinetic model fit
 - [ ] maintain time clustering in script 2's bar graph but sort by loading low to high
 - [ ] finalize plot formatting and consistency (colors, titles, font, size, gridlines, etc.)
 - [ ] try plotly graph replacements
+- [x] add error bars to kinetic model fit
 - [x] use the PV scalar instead of the peak-wing difference
 - [x] use lmfit to more easily extract error on the fit here as well as script 3
 - [x] add error bars from lmfit to bar graph
@@ -18,6 +18,34 @@
 2. accepts the path to the file exported from the 1st script, determines Si-H band value through pseudo-voigt fit, exports the values to a separate CSV file, and graphically previews the peek fit amplitude values vs time as well as printing the the pseudo-voigt fit parameters
 
 3. accepts the path to the file exported from the 2nd script and plots kinetic model fits to the Si-H peak values
+
+## example output (Dec 14, 2023 Data)
+
+### script 1: correction and consolidation
+
+![raw](exports\images\1_raw.png "raw spectra")
+
+![baseline](exports\images\1_baselines.png "baseline fits subtracted from raw before normalization")
+
+![corrected-1](exports\images\1_corrected_full.png "post-baseline correction and normalization spectra (wide view)")
+
+![corrected-2](exports\images\1_corrected_zoom.png "post-baseline correction and normalization spectra (zoomed to view basleine)")
+
+### script 2: Si-H peak pseduo-voigt fitting
+
+![pseudo-voigt fits](exports\images\2_pseduvoigt.png "pseudo-voigt fits on Si-H peaks for each spectra")
+
+![PV Amplitudes](exports\images\2_amplitude-bargraph.png "bar graph of amplitudes with lmfit error bars")
+
+### script 3: kinetic model fitting
+
+![decay fits](exports\images\3_scatterfit-firstorderdecay.png "pseudo-voigt fits on Si-H peaks for each spectra")
+
+![k value - scatter](exports\images\3_k-scatter-log.png "k values as scatter plot with lmfit error bars (no 0 point because log scale)")
+
+![k value - bar](exports\images\3_k-bar-error.png "k values as bar chart with lmfit error bars")
+
+## deprecated
 
 ![spectra](exports\images\saltplate_normalized_integration_comparison1.png "normalized salt plate time-cure bar graph comparison")
 

@@ -61,8 +61,8 @@ for stat in fit_statistics:
 
 # Scatter plot for k values
 plt.figure(figsize=(10, 6))
-plt.scatter(k_values.keys(), [v['k'] for v in k_values.values()], color='blue', marker='o', s=100)
-plt.errorbar(k_values.keys(), [v['k'] for v in k_values.values()], yerr=[v['k_error'] for v in k_values.values()], fmt='none', color='blue')
+plt.scatter(k_values.keys(), [v['k'] for v in k_values.values()], marker='o', s=100)
+plt.errorbar(k_values.keys(), [v['k'] for v in k_values.values()], yerr=[v['k_error'] for v in k_values.values()], fmt='none')
 plt.xscale('log')  # Setting the x-axis to logarithmic scale
 plt.xlabel('Agent Loading (wt%)')
 plt.ylabel('k Value')
