@@ -23,33 +23,33 @@
 
 ### script 1: correction and consolidation
 
-![raw](exports\images\1_raw.png "raw spectra")
+![raw](exports/images/1_raw.png "raw spectra")
 
-![baseline](exports\images\1_baselines.png "baseline fits subtracted from raw before normalization")
+![baseline](exports/images/1_baselines.png "baseline fits subtracted from raw before normalization")
 
-![corrected-1](exports\images\1_corrected_full.png "post-baseline correction and normalization spectra (wide view)")
+![corrected-1](exports/images/1_corrected_full.png "post-baseline correction and normalization spectra (wide view)")
 
-![corrected-2](exports\images\1_corrected_zoom.png "post-baseline correction and normalization spectra (zoomed to view basleine)")
+![corrected-2](exports/images/1_corrected_zoom.png "post-baseline correction and normalization spectra (zoomed to view basleine)")
 
 ### script 2: Si-H peak pseduo-voigt fitting
 
-![pseudo-voigt fits](exports\images\2_pseduvoigt.png "pseudo-voigt fits on Si-H peaks for each spectra")
+![pseudo-voigt fits](exports/images/2_pseduvoigt.png "pseudo-voigt fits on Si-H peaks for each spectra")
 
-![PV Amplitudes](exports\images\2_amplitude-bargraph.png "bar graph of amplitudes with lmfit error bars")
+![PV Amplitudes](exports/images/2_amplitude-bargraph.png "bar graph of amplitudes with lmfit error bars")
 
 ### script 3: kinetic model fitting
 
-![decay fits](exports\images\3_scatterfit-firstorderdecay.png "pseudo-voigt fits on Si-H peaks for each spectra")
+![decay fits](exports/images/3_scatterfit-firstorderdecay.png "pseudo-voigt fits on Si-H peaks for each spectra")
 
-![k value - scatter](exports\images\3_k-scatter-log.png "k values as scatter plot with lmfit error bars (no 0 point because log scale)")
+![k value - scatter](exports/images/3_k-scatter-log.png "k values as scatter plot with lmfit error bars (no 0 point because log scale)")
 
-![k value - bar](exports\images\3_k-bar-error.png "k values as bar chart with lmfit error bars")
+![k value - bar](exports/images/3_k-bar-error.png "k values as bar chart with lmfit error bars")
 
 ## deprecated
 
-![spectra](exports\images\saltplate_normalized_integration_comparison1.png "normalized salt plate time-cure bar graph comparison")
+![spectra](exports/images/saltplate_normalized_integration_comparison1.png "normalized salt plate time-cure bar graph comparison")
 
-![scatter](exports\images\10A_5ppt-vs-0-vs-time_kinetics_scatter.png "Lased PDMS: loading vs time kinetic model scatterfit")
+![scatter](exports/images/10A_5ppt-vs-0-vs-time_kinetics_scatter.png "Lased PDMS: loading vs time kinetic model scatterfit")
 
 ## to use:
 1. format CSVs in input folder as follows: "cure-condition_agent-loading_time-unit.csv", e.g. "laser-15Wcm2_CB-5e-3_20-h.csv"
