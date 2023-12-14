@@ -1,26 +1,18 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import os
-from scipy.optimize import curve_fit
-from scipy.signal import find_peaks, peak_widths
-import numpy as np
+from lmfit import minimize, Parameters
 from main import Extract_Filename_Metadata
-import numpy as np
-from scipy.optimize import curve_fit
 
 """
 step 2: 
 takes corrected IR spectra,
-fits peak of interest to pseudo-voigt,
-extracts/exports peak-wing difference,
-generates two plots: the psuedo-voigt scatterfit and the peak-wing values bar graph
+fits peak of interest to pseudo-voigt (PV),
+extracts/exports amplitudes for the PV peak of interest,
+generates two plots: the PV scatterfit and the PV amplitude bar graph
 """
-
-# TODO
-# use the PV scalar instead of the peak-wing difference
-# figure out how PV is going negative because it shouldn't be able to
-# use lmfit for parameter error here as well as script 3
 
 # Pseudo-Voigt Function
 def pseudo_voigt(x, A, mu, sigma, gamma, eta):
@@ -40,7 +32,6 @@ def Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath):
     
     # Initialize a dictionary to store fit parameters, 'Peak-Wing Difference', and metadata for each dataset
     fit_params_dict = {}
-    peak_wing_diff_dict = {}
     metadata_dict = {}
     
     # Extract and sort the metadata
@@ -63,32 +54,45 @@ def Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath):
         max_x = x_data[np.argmax(y_data)]
         initial_guess = [max_y, max_x, 10, 10, 0.5]
         
-        # Perform curve fitting
-        params, _ = curve_fit(pseudo_voigt, x_data, y_data, p0=initial_guess)
-                
-        # Store the fit parameters
-        fit_params_dict[columnname] = params
+        # Create lmfit Parameters object
+        params = Parameters()
+        params.add('A', value=initial_guess[0])
+        params.add('mu', value=initial_guess[1])
+        params.add('sigma', value=initial_guess[2])
+        params.add('gamma', value=initial_guess[3])
+        params.add('eta', value=initial_guess[4])
+        
+        # Define the residual function for lmfit
+        def residual(params, x, y):
+            A = params['A'].value
+            mu = params['mu'].value
+            sigma = params['sigma'].value
+            gamma = params['gamma'].value
+            eta = params['eta'].value
+            model = pseudo_voigt(x, A, mu, sigma, gamma, eta)
+            return y - model
+        
+        # Perform lmfit minimize
+        result = minimize(residual, params, args=(x_data, y_data))
+        
+        # Store the fit parameters and their errors
+        fit_params_dict[columnname] = {
+            'A': result.params['A'].value,
+            'mu': result.params['mu'].value,
+            'sigma': result.params['sigma'].value,
+            'gamma': result.params['gamma'].value,
+            'eta': result.params['eta'].value,
+            'A_err': result.params['A'].stderr,
+            'mu_err': result.params['mu'].stderr,
+            'sigma_err': result.params['sigma'].stderr,
+            'gamma_err': result.params['gamma'].stderr,
+            'eta_err': result.params['eta'].stderr
+        }
         
         # Fit the Pseudo-Voigt function and find peak max
-        fitted_y = pseudo_voigt(x_data, *params)
+        fitted_y = pseudo_voigt(x_data, *result.params.values())
         peak_max = max(fitted_y)
 
-        # Find peaks and calculate widths
-        peaks, _ = find_peaks(fitted_y)
-        if len(peaks) > 0:
-            results_half = peak_widths(fitted_y, peaks, rel_height=0.5)
-            if len(results_half[2]) > 0 and len(results_half[3]) > 0:
-                wing_min_indices = [int(min(max(idx, 0), len(fitted_y) - 1)) for idx in [results_half[2][0], results_half[3][0]]]
-                wing_min = min(fitted_y[wing_min_indices])
-            else:
-                wing_min = min(fitted_y)
-        else:
-            wing_min = min(fitted_y)
-
-        # Calculate and store the peak-wing difference
-        peak_wing_diff = peak_max - wing_min
-        peak_wing_diff_dict[columnname] = peak_wing_diff
-        
         # Plot the original data and fitted curve
         plt.plot(x_data, y_data, label=f'Original - {columnname}', color='skyblue')
         plt.plot(x_data, fitted_y, linestyle='--', label=f'Fitted - {columnname}', color='navy')
@@ -99,36 +103,39 @@ def Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath):
     plt.legend()
     plt.grid(True)
 
-    print("Fit Parameters: [A, mu, sigma, gamma, eta]")
-    for key, value in fit_params_dict.items():
-        print(f"{key}: {value}")
+    # print("Fit Parameters: [A, mu, sigma, gamma, eta]")
+    # for key, value in fit_params_dict.items():
+    #     print(f"{key}: {value}")
+    #     print(f"Errors: [A, mu, sigma, gamma, eta]")
+    #     print(f"{key}: [{value['A_err']}, {value['mu_err']}, {value['sigma_err']}, {value['gamma_err']}, {value['eta_err']}]")
 
     # Creating the DataFrame for the plot
-    peak_wing_diff_df = pd.DataFrame([(col, peak_wing_diff_dict[col], *metadata_dict[col]) for col in sorted_columns], columns=['Sample', 'Amplitude', 'Agent Loading', 'Time Value'])
+    PV_amplitude_df = pd.DataFrame([(col, fit_params_dict[col]['A'], *metadata_dict[col]) for col in sorted_columns], columns=['Sample', 'Amplitude', 'Agent Loading', 'Time Value'])
     
     # Sort the DataFrame by agent loading and time value
-    peak_wing_diff_df.sort_values(by=['Sample'], key=lambda x: x.map(metadata_dict.get), inplace=True)
+    PV_amplitude_df.sort_values(by=['Sample'], key=lambda x: x.map(metadata_dict.get), inplace=True)
     
     # Export the DataFrame to a CSV
     base_name = os.path.basename(readpath)
     name_without_extension = os.path.splitext(base_name)[0]
     new_name = f"{name_without_extension}_PV-Amplitudes.csv"
     writepath = os.path.join(os.path.dirname(readpath), new_name)
-    peak_wing_diff_df.to_csv(writepath, index=False)
+    PV_amplitude_df.to_csv(writepath, index=False)
 
     # Assign unique colors to each loading value
-    loading_values = [metadata_dict[col][0] for col in peak_wing_diff_df['Sample']]
+    loading_values = [metadata_dict[col][0] for col in PV_amplitude_df['Sample']]
     unique_loadings = list(set(loading_values))
     color_map = cm.get_cmap('tab10', len(unique_loadings))
     loading_color_dict = dict(zip(unique_loadings, color_map(range(len(unique_loadings)))))
     bar_colors = [loading_color_dict[loading] for loading in loading_values]
 
-    # Plot the bar graph for 'Peak-Wing Difference' with different colors for each loading value
+    # Bar Graph
     plt.figure(figsize=(14, 8))
-    plt.bar(peak_wing_diff_df['Sample'], peak_wing_diff_df['Amplitude'], color=bar_colors, edgecolor='black')
+    error_values = [value['A_err'] for value in fit_params_dict.values()]
+    plt.bar(PV_amplitude_df['Sample'], PV_amplitude_df['Amplitude'], color=bar_colors, edgecolor='black', yerr=error_values)
     plt.xlabel('Sample', fontsize=14)
-    plt.ylabel('Peak-Wing Difference', fontsize=14)
-    plt.title('Peak-Wing Difference for Each Sample Sorted by Agent Loading and Time', fontsize=16)
+    plt.ylabel('Amplitude', fontsize=14)
+    plt.title('Amplitude for Each Sample Sorted by Agent Loading and Time', fontsize=16)
     plt.xticks(rotation=30)
     plt.grid(True, axis='y')
 

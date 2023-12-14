@@ -1,8 +1,11 @@
 # IR CSV PDMS Kinetics Extractor
 
-## immediate to-do
-- [ ] see with Ben if the baseline correction should correct for the baseline bowing and if I should, idk, find a function that minimizes the wings of certain peaks that are unlikely to correspond to CB directly?  Pull in the CB IR spectra
-- [ ] consider retrying but with the new salt plates
+## to-do
+- [ ] maintain time clustering in script 2's bar graph but sort by loading low to high
+- [ ] keep colors consistent across scripts
+- [x] use the PV scalar instead of the peak-wing difference
+- [x] use lmfit to more easily extract error on the fit here as well as script 3
+- [x] add error bars from lmfit to bar graph
 - [x] modify to correct for tilt before baseline correction
 - [x] find out why current naming convention isn't identified in color selection
 
