@@ -17,10 +17,10 @@ conventions = {
         'AuNP': '#FF0000', # red
         ## blues for CB
         'CB-0': '#FFA5F0', # oranger
-        'CB-1e+1': '#52B2BF', # sapphire
+        'CB-1e+1': '#9BA0D8', # lear
         'CB-1e-2': '#0773B1', # lear
         'CB-1e-3': '#281E5D', # indigo
-        'CB-1e-4': '#0A1172', # navy
+        'CB-1e-4': '#E79F27', # lear
         'CB-1e-5': '#1338BE', # cobalt
         'CB-1e-6': '#016064', # ocean
         'CB-1e-7': '#52B2BF', # sapphire
