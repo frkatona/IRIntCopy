@@ -4,6 +4,7 @@
 - [ ] maintain time clustering in script 2's bar graph but sort by loading low to high
 - [ ] finalize plot formatting and consistency (colors, titles, font, size, gridlines, etc.)
 - [ ] try plotly graph replacements
+- [x] propagate error from PV fit --> kinetic model fit --> k exponential model fit and output fit reports (see script 3, v2)
 - [x] add error bars to kinetic model fit
 - [x] use the PV scalar instead of the peak-wing difference
 - [x] use lmfit to more easily extract error on the fit here as well as script 3
