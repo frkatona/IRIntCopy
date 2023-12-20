@@ -3,14 +3,15 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 from lmfit import Model
+from pathlib import Path
 
 # First order kinetic decay function
 def first_order_kinetic_decay(x, A_0, k, C):
     return A_0 * np.exp(-k * x) + C
 
 # Load the CSV file
-file_path = 'exports/CSV_exports/231208_4xCB-loading_KBrTransmission_ambient-cure_consolidated_PV-Amplitudes.csv'  # Replace with your CSV file path
-data = pd.read_csv(file_path)
+import_path = Path('exports/CSV_exports/231208_4xCB-loading_KBrTransmission_ambient-cure_consolidated_PV-Amplitudes.csv')  # Replace with your CSV file path
+data = pd.read_csv(import_path)
 
 # Preparing the scatter plot
 plt.figure(figsize=(12, 8))
@@ -74,7 +75,7 @@ k_errors_array = np.array([v['k_error'] for v in k_values.values()])
 
 # Create a model and parameters
 exp_model = Model(exp_model)
-params = exp_model.make_params(A=1, B=0.1, C=0)
+params = exp_model.make_params(A=26, B=1e-4, C=-26)
 
 # Perform the fit
 result = exp_model.fit(k_values_array, params, x=loadings_array, weights=1/k_errors_array)

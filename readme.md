@@ -1,6 +1,8 @@
 # IR CSV PDMS Kinetics Extractor
 
 ## to-do
+
+- [ ] discuss curve fit (seems basically linear at this scale) and fit report (massive uncertainties and correlations in exp fit)
 - [ ] maintain time clustering in script 2's bar graph but sort by loading low to high
 - [ ] finalize plot formatting and consistency (colors, titles, font, size, gridlines, etc.)
 - [ ] try plotly graph replacements
