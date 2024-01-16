@@ -14,6 +14,7 @@ conventions = {
     },
     'agent-loading': {
         'no-agent': '#FFA500', # orange
+        'na-0': '#FFA500', # orange
         'AuNP': '#FF0000', # red
         ## blues for CB
         'CB-0': '#FFA5F0', # oranger

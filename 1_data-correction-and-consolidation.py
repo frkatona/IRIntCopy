@@ -50,7 +50,7 @@ def SpectraCorrection(data):
         """
         processed_values = {wn: process_wavenumber(wn, data) for wn in wavenumbers}
         p = Polynomial.fit(list(processed_values.keys()), list(processed_values.values()), fit_degree)
-        print(p)
+        # print(p)
         return p(data['cm-1'])
 
     def normalize_spectrum(data, corrected_absorbance, start_wn, end_wn):
@@ -133,5 +133,5 @@ def Consolidate_And_Plot_Spectra(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath = r"CSVs\231208_4xCB-loading_KBrTransmission_ambient-cure"
+readpath = r"CSVs\221202_10A_808nm_5e-3vs0cb"
 Consolidate_And_Plot_Spectra(readpath)
