@@ -10,7 +10,7 @@ def first_order_kinetic_decay(x, A_0, k, C):
     return A_0 * np.exp(-k * x) + C
 
 # Load the CSV file
-import_path = Path('exports/CSV_exports/231208_4xCB-loading_KBrTransmission_ambient-cure_consolidated_PV-Amplitudes.csv')  # Replace with your CSV file path
+import_path = Path(r'exports\CSV_exports\221202_10A_808nm_5e-3vs0cb_consolidated_PV-Amplitudes.csv')  
 data = pd.read_csv(import_path)
 
 # Preparing the scatter plot
@@ -59,9 +59,9 @@ for i, loading in enumerate(unique_loadings):
         x_range = np.linspace(subset['Time Value'].min(), subset['Time Value'].max(), 500)
         plt.plot(x_range, first_order_kinetic_decay(x_range, *best_popt), color=colors[i])
 
-plt.title('Scatter Plot with First Order Kinetic Decay Fit for Each Agent Loading')
-plt.xlabel('time /h')
-plt.ylabel('Amplitude')
+# plt.title('Scatter Plot with First Order Kinetic Decay Fit for Each Agent Loading', fontsize=16)
+plt.xlabel('time /s', fontsize=22)
+plt.ylabel('pseudo-Voigt profile amplitude (arb.)', fontsize=22)
 plt.legend(title='Agent Loading (wt%)', loc='best')
 
 # Define the exponential model
@@ -78,19 +78,22 @@ exp_model = Model(exp_model)
 params = exp_model.make_params(A=26, B=1e-4, C=-26)
 
 # Perform the fit
-result = exp_model.fit(k_values_array, params, x=loadings_array, weights=1/k_errors_array)
+# result = exp_model.fit(k_values_array, params, x=loadings_array, weights=1/k_errors_array)
 
 # Plotting the fit
 plt.figure(figsize=(12, 8))
-plt.errorbar(loadings_array, k_values_array, yerr=k_errors_array, fmt='o', label='Data with error')
-plt.plot(loadings_array, result.best_fit, label='Fitted curve', color='red')
-plt.title('Exponential Fit of k vs. Loading')
-plt.xlabel('Loading')
-plt.ylabel('k')
+plt.bar(loadings_array, k_values_array, yerr=k_errors_array, label='Data with error', width=0.001)
+# plt.errorbar(loadings_array, k_values_array, yerr=k_errors_array, fmt='o', label='Data with error')
+
+# plt.plot(loadings_array, result.best_fit, label='Fitted curve', color='red')
+# plt.title('Exponential Fit of k vs. Loading')
+
+plt.xlabel('loading /mass fraction', fontsize=22)
+plt.ylabel('k /s$^{-1}$', fontsize=22)
 plt.legend()
 
 # Print the fit report
 print("Fit Report for k vs. Loading:")
-print(result.fit_report())
+# print(result.fit_report())
 
 plt.show()

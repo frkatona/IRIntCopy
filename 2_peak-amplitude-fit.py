@@ -102,10 +102,10 @@ def Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath):
     plt.grid(True)
 
     # print("Fit Parameters: [A, mu, sigma, gamma, eta]")
-    # for key, value in fit_params_dict.items():
-    #     print(f"{key}: {value}")
-    #     print(f"Errors: [A, mu, sigma, gamma, eta]")
-    #     print(f"{key}: [{value['A_err']}, {value['mu_err']}, {value['sigma_err']}, {value['gamma_err']}, {value['eta_err']}]")
+    for key, value in fit_params_dict.items():
+        print(f"{key}: {value}")
+        print(f"Errors: [A, mu, sigma, gamma, eta]")
+        print(f"{key}: [{value['A_err']}, {value['mu_err']}, {value['sigma_err']}, {value['gamma_err']}, {value['eta_err']}]")
 
     # Creating the DataFrame for the plot
     PV_amplitude_df = pd.DataFrame([(col, fit_params_dict[col]['A'], fit_params_dict[col]['A_err'], *metadata_dict[col]) for col in sorted_columns], columns=['Sample', 'Amplitude', 'Amplitude Error', 'Agent Loading', 'Time Value'])
@@ -141,5 +141,5 @@ def Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath = r"exports\CSV_exports\231208_4xCB-loading_KBrTransmission_ambient-cure_consolidated.csv"
+readpath = r"exports\CSV_exports\221202_10A_808nm_5e-3vs0cb_consolidated.csv"
 Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath)

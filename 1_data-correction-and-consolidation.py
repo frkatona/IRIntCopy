@@ -16,7 +16,7 @@ previews the changes before moving on
 
 def interpolate_to_common_wn(df, common_wn):
     """
-    Interpolates the dataframe to a common set of wavenumbers.
+    Interpolates the dataframe to a common set of wavenumbers (if needed)
     """
     # Interpolate
     df_interpolated = df.set_index('cm-1').reindex(common_wn).interpolate(method='linear').reset_index()
@@ -25,11 +25,12 @@ def interpolate_to_common_wn(df, common_wn):
 
 def SpectraCorrection(data):
     '''Corrects spectra for polynomial baseline drift and then normalizes'''
+
     # Converts to absorbance if max value suggests spectra is in transmittance
     if data.iloc[:,1].max() > 60: 
-        data /= 100
-        data += 1e-10 
-        data = np.log10(data) * -1
+        data.iloc[:,1] = data.iloc[:,1].clip(lower=1e-8) # floor above 0 to avoid log errors
+        data.iloc[:, 1] /= 100 # convert from %T to T
+        data.iloc[:, 1] = np.log10(data.iloc[:, 1]) * -1 # convert from T to A
 
     def process_wavenumber(wavenumber, data, window=5):
         """
