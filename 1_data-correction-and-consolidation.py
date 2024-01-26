@@ -113,6 +113,7 @@ def Consolidate_And_Plot_Spectra(readpath):
         color = Get_Gradient_Color(base_color, 1 - i/num_samples)  # Note the "1 -" to invert the color gradient
         df_add.plot('cm-1', columnname, ax=ax_raw, color=color)
         df_tot.plot('cm-1', columnname, ax=ax_corrected, color=color)
+        df_tot.to_csv('test.csv', index=False)
         df_baseline.plot('cm-1', columnname, ax=ax_baseline, color=color)
 
 
@@ -134,5 +135,5 @@ def Consolidate_And_Plot_Spectra(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath = r"CSVs\221202_10A_808nm_5e-3vs0cb"
+readpath = r"CSVs\231208_4xCB-loading_KBrTransmission_ambient-cure"
 Consolidate_And_Plot_Spectra(readpath)

@@ -86,16 +86,20 @@ print(f"Equation: {equation}")
 # plt.title('Scatter Plot of k Values for Each Agent Loading (Logarithmic Scale)')
 # plt.grid(True)
 
+fontsize = 40
+
 # Bar plot for k values
-plt.figure(figsize=(10, 6))
-x_coordinates = np.arange(len(k_values))  # Generate equally spaced x-coordinates
-plt.bar(x_coordinates, [v['k'] for v in k_values.values()], color='blue')
+plt.figure(figsize=(16, 10))
+x_coordinates = np.arange(len(k_values))  
+plt.bar(x_coordinates, [v['k'] for v in k_values.values()], color='#295695')
 plt.errorbar(x_coordinates, [v['k'] for v in k_values.values()], yerr=[v['k_error'] for v in k_values.values()], fmt='none', color='black')
-plt.xticks(x_coordinates, k_values.keys())  # Set the x-axis labels to the agent loadings
-plt.xlabel('Agent Loading (wt%)')
-plt.ylabel('k Value')
-plt.title('Bar Chart of k Values for Each Agent Loading')
-plt.grid(True)
+plt.xticks(x_coordinates, k_values.keys())
+plt.xlabel('Agent Loading (wt/wt)', fontsize=fontsize)
+plt.ylabel('k Value', fontsize = fontsize)
+plt.xticks(fontsize=fontsize/2)
+plt.yticks(fontsize=fontsize/2)
+plt.legend(loc='best', fontsize=fontsize/2)
+plt.grid(False)
 
 # export the k dictionary to a csv with columns (loading, k, k_error)
 k_df = pd.DataFrame.from_dict(k_values, orient='index', columns=['k', 'k_error'])
