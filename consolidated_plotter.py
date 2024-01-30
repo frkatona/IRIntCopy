@@ -8,14 +8,16 @@ def plot_ir_spectra(file_path):
 
     # Color map for the plot lines based on "b" values
     color_map = {
-        "CB-0": "#7bf1a8",
-        "CB-1e+1": "#f58549",
-        "CB-1e-2": "#7de2d1",
-        "CB-1e-4": "#00a5cf"
+        # "CB-0": "#7bf1a8",
+        # "CB-1e+1": "#f58549",
+        # "CB-1e-2": "#7de2d1",
+        # "CB-1e-4": "#00a5cf",
+        "na-0": "#006d77",
+        "CB-5e-3": "#9d0208"
     }
 
     # Create the plot
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(16, 10))
 
     # Plot each spectrum
     for column in data.columns[1:]:
@@ -40,12 +42,12 @@ def plot_ir_spectra(file_path):
     plt.tick_params(axis='both', which='major', labelsize=20)
         
     # general formatting
-    plt.legend()
+    # plt.legend()
     plt.tight_layout()
 
     # Show the plot
     plt.show()
 
 # Example usage
-file_path = r'CSVs\231208_4xCB-loading_KBrTransmission_ambient-cure\test.csv'  # Replace with the path to your CSV file
+file_path = r'CSVs\221202_10A_808nm_5e-3vs0cb\test.csv'  # Replace with the path to your CSV file
 plot_ir_spectra(file_path)

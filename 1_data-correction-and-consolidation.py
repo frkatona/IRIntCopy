@@ -135,5 +135,5 @@ def Consolidate_And_Plot_Spectra(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath = r"CSVs\231208_4xCB-loading_KBrTransmission_ambient-cure"
+readpath = r"CSVs\221202_10A_808nm_5e-3vs0cb"
 Consolidate_And_Plot_Spectra(readpath)
