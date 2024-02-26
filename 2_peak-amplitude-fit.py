@@ -141,5 +141,5 @@ def Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath = r"exports\CSV_exports\221202_10A_808nm_5e-3vs0cb_consolidated.csv"
+readpath = r"exports\CSV_exports\240226_1e-6_70W_kinetics2_consolidated.csv"
 Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath)

@@ -11,7 +11,7 @@ def first_order_kinetic_decay(x, A_0, k, C):
     return A_0 * np.exp(-k * x) + C
 
 # Load the CSV file
-file_path = r'exports\CSV_exports\221202_10A_808nm_5e-3vs0cb_consolidated_PV-Amplitudes.csv'  # Replace with your CSV file path
+file_path = r'exports\CSV_exports\240226_1e-6_70W_kinetics2_consolidated_PV-Amplitudes.csv'  # Replace with your CSV file path
 outputPath = r'exports\CSV_exports\221202_10A_808nm_5e-3vs0cb_consolidated_PV-Amplitudes_etc.csv'
 data = pd.read_csv(file_path)
 
@@ -30,7 +30,7 @@ k_values = {}  # Dictionary to store k values
 # Scatter plot and curve fitting
 for i, loading in enumerate(unique_loadings):
     subset = data[data['Agent Loading'] == loading]
-    sns.scatterplot(x=subset['Time Value'], y=subset['Amplitude'], color=colors[i], label=f'{loading}%', marker='o', s=100)
+    sns.scatterplot(x=subset['Time Value'], y=subset['Amplitude'], color=colors[i], label=f'{loading}', marker='o', s=100)
 
     # Add error bars
     plt.errorbar(subset['Time Value'], subset['Amplitude'], yerr=subset['Amplitude Error'], fmt='none', color=colors[i])
@@ -48,13 +48,13 @@ for i, loading in enumerate(unique_loadings):
             lowest_error = result.chisqr
 
     if best_popt is not None:
-        fit_statistics.append(f"Loading {loading}%: A_t = {best_popt[0]:.4f} * e^(-{best_popt[1]:.4f}*t) + {best_popt[2]:.4f}, Error: {lowest_error:.4e}")
+        fit_statistics.append(f"Loading {loading}: A_t = {best_popt[0]:.4f} * e^(-{best_popt[1]:.4f}*t) + {best_popt[2]:.4f}, Error: {lowest_error:.4e}")
         k_values[loading] = {'k': best_popt[1], 'k_error': result.params['k'].stderr}  # Storing the k value and its error
         x_range = np.linspace(subset['Time Value'].min(), subset['Time Value'].max(), 500)
         plt.plot(x_range, first_order_kinetic_decay(x_range, *best_popt), color=colors[i])
 
 plt.title('Scatter Plot with First Order Kinetic Decay Fit for Each Agent Loading')
-plt.xlabel('time /h')
+plt.xlabel('time /' + data['Sample'][0].split('-')[-1])
 plt.ylabel('Si-H PV amplitude')
 # plt.legend()
 

@@ -91,7 +91,7 @@ def Consolidate_And_Plot_Spectra(readpath):
     plt.rcParams.update({
         'figure.figsize': (16, 10),
         'font.family': 'sans-serif',
-        'font.sans-serif': 'Moderna', # Adjust this if 'Moderna' is not available
+        'font.sans-serif': 'Arial',
         'xtick.labelsize': 20,
         'ytick.labelsize': 20,
         'axes.labelsize': 40,
@@ -148,5 +148,5 @@ def Consolidate_And_Plot_Spectra(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath = r"CSVs\231208_4xCB-loading_KBrTransmission_ambient-cure"
+readpath = r"CSVs\240226_1e-6_70W_kinetics2"
 Consolidate_And_Plot_Spectra(readpath)

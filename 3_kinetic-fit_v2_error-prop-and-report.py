@@ -10,7 +10,7 @@ def first_order_kinetic_decay(x, A_0, k, C):
     return A_0 * np.exp(-k * x) + C
 
 # Load the CSV file
-import_path = Path(r'exports\CSV_exports\231208_4xCB-loading_KBrTransmission_ambient-cure_consolidated_PV-Amplitudes.csv')  
+import_path = Path(r'exports\CSV_exports\240226_1e-6_70W_kinetics_consolidated_PV-Amplitudes.csv')  
 data = pd.read_csv(import_path)
 
 # Preparing the scatter plot
