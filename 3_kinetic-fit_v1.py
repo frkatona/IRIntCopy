@@ -11,7 +11,8 @@ def first_order_kinetic_decay(x, A_0, k, C):
     return A_0 * np.exp(-k * x) + C
 
 # Load the CSV file
-file_path = r'exports\CSV_exports\231208_4xCB-loading_KBrTransmission_ambient-cure_consolidated_PV-Amplitudes.csv'  # Replace with your CSV file path
+file_path = r'exports\CSV_exports\221202_10A_808nm_5e-3vs0cb_consolidated_PV-Amplitudes.csv'  # Replace with your CSV file path
+outputPath = r'exports\CSV_exports\221202_10A_808nm_5e-3vs0cb_consolidated_PV-Amplitudes_etc.csv'
 data = pd.read_csv(file_path)
 
 # Preparing the scatter plot
@@ -54,12 +55,14 @@ for i, loading in enumerate(unique_loadings):
 
 plt.title('Scatter Plot with First Order Kinetic Decay Fit for Each Agent Loading')
 plt.xlabel('time /h')
-plt.ylabel('Amplitude')
-plt.legend(title='Agent Loading (wt%)', loc='best')
+plt.ylabel('Si-H PV amplitude')
+# plt.legend()
 
 # Print the fit equations and their statistics
 for stat in fit_statistics:
     print(stat)
+
+fontsize = 40
 
 ## Scatterfit for k (linear) ##
 plt.figure(figsize=(10, 6))
@@ -68,8 +71,10 @@ plt.errorbar(k_values.keys(), [v['k'] for v in k_values.values()], yerr=[v['k_er
 fit_line_x = np.linspace(min(k_values.keys()), max(k_values.keys()), 100)
 fit_line_y = np.polyval(np.polyfit(list(k_values.keys()), np.log([v['k'] for v in k_values.values()]), 1), fit_line_x)
 plt.plot(fit_line_x, np.exp(fit_line_y), color='red', linestyle='--')
-plt.xlabel('Agent Loading (wt%)')
-plt.ylabel('k Value')
+# plt.xlabel('agent loading (wt/wt)')
+# plt.ylabel('k value')
+plt.xticks(fontsize=fontsize/2)
+
 plt.title('Scatter Plot of k Values for Each Agent Loading')
 plt.grid(True)
 
@@ -86,16 +91,15 @@ print(f"Equation: {equation}")
 # plt.title('Scatter Plot of k Values for Each Agent Loading (Logarithmic Scale)')
 # plt.grid(True)
 
-fontsize = 40
 
 # Bar plot for k values
 plt.figure(figsize=(16, 10))
 x_coordinates = np.arange(len(k_values))  
 plt.bar(x_coordinates, [v['k'] for v in k_values.values()], color='#295695')
-plt.errorbar(x_coordinates, [v['k'] for v in k_values.values()], yerr=[v['k_error'] for v in k_values.values()], fmt='none', color='black')
+plt.errorbar(x_coordinates, [v['k'] for v in k_values.values()], yerr=[v['k_error'] for v in k_values.values()], fmt='none', color='black', capsize=5)
 plt.xticks(x_coordinates, k_values.keys())
 plt.xlabel('Agent Loading (wt/wt)', fontsize=fontsize)
-plt.ylabel('k Value', fontsize = fontsize)
+plt.ylabel('k value', fontsize = fontsize)
 plt.xticks(fontsize=fontsize/2)
 plt.yticks(fontsize=fontsize/2)
 plt.legend(loc='best', fontsize=fontsize/2)
@@ -104,6 +108,6 @@ plt.grid(False)
 # export the k dictionary to a csv with columns (loading, k, k_error)
 k_df = pd.DataFrame.from_dict(k_values, orient='index', columns=['k', 'k_error'])
 k_df['loading'] = k_df.index
-k_df.to_csv(r'exports\CSV_exports\231208_4xCB-loading_KBrTransmission_ambient-cure_consolidated_PV-k-values.csv', index=False)
+k_df.to_csv(outputPath, index=False)
 
 plt.show()

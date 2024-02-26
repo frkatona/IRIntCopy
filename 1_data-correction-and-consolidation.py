@@ -88,6 +88,19 @@ def Consolidate_And_Plot_Spectra(readpath):
     df_tot = pd.read_csv(filelist[0], skiprows=2, header=None, names=['cm-1', columnname])
     df_tot = df_tot.sort_values(by=['cm-1'], ignore_index=True)
 
+    plt.rcParams.update({
+        'figure.figsize': (16, 10),
+        'font.family': 'sans-serif',
+        'font.sans-serif': 'Moderna', # Adjust this if 'Moderna' is not available
+        'xtick.labelsize': 20,
+        'ytick.labelsize': 20,
+        'axes.labelsize': 40,
+        'axes.titlesize': 0,  # Effectively hides titles
+        # 'legend.fontsize': 0,  # Effectively hides legends
+        'xtick.direction': 'out',  # Outer ticks
+        'ytick.direction': 'out',  # Outer ticks
+    })
+
     # plot initialization
     fig_raw, ax_raw = plt.subplots()
     fig_stand, ax_corrected = plt.subplots()
@@ -113,7 +126,7 @@ def Consolidate_And_Plot_Spectra(readpath):
         color = Get_Gradient_Color(base_color, 1 - i/num_samples)  # Note the "1 -" to invert the color gradient
         df_add.plot('cm-1', columnname, ax=ax_raw, color=color)
         df_tot.plot('cm-1', columnname, ax=ax_corrected, color=color)
-        df_tot.to_csv('test.csv', index=False)
+        # df_tot.to_csv('test.csv', index=False)
         df_baseline.plot('cm-1', columnname, ax=ax_baseline, color=color)
 
 
@@ -135,5 +148,5 @@ def Consolidate_And_Plot_Spectra(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath = r"CSVs\221202_10A_808nm_5e-3vs0cb"
+readpath = r"CSVs\231208_4xCB-loading_KBrTransmission_ambient-cure"
 Consolidate_And_Plot_Spectra(readpath)
