@@ -28,12 +28,17 @@ fit_statistics = []
 k_values = {}  # Dictionary to store k values
 
 # Scatter plot and curve fitting
+fig_width = 12
+fig_height = fig_width / 1.618
+
+fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+
 for i, loading in enumerate(unique_loadings):
     subset = data[data['Agent Loading'] == loading]
-    sns.scatterplot(x=subset['Time Value'], y=subset['Amplitude'], color=colors[i], label=f'{loading}', marker='o', s=100)
+    sns.scatterplot(x=subset['Time Value'] / 60, y=subset['Amplitude'], color=colors[i], label=f'{loading}', marker='o', s=600)
 
     # Add error bars
-    plt.errorbar(subset['Time Value'], subset['Amplitude'], yerr=subset['Amplitude Error'], fmt='none', color=colors[i])
+    plt.errorbar(subset['Time Value'] / 60, subset['Amplitude'], yerr=subset['Amplitude Error'], fmt='none', color=colors[i], capsize=5, elinewidth=1, capthick=2)
 
     best_popt = None
     lowest_error = float('inf')
@@ -48,15 +53,18 @@ for i, loading in enumerate(unique_loadings):
             lowest_error = result.chisqr
 
     if best_popt is not None:
-        fit_statistics.append(f"Loading {loading}: A_t = {best_popt[0]:.4f} * e^(-{best_popt[1]:.4f}*t) + {best_popt[2]:.4f}, Error: {lowest_error:.4e}")
+        fit_statistics.append(f"Loading {loading}%: A_t = {best_popt[0]:.4f} * e^(-{best_popt[1]:.4f}*t) + {best_popt[2]:.4f}, Error: {lowest_error:.4e}")
         k_values[loading] = {'k': best_popt[1], 'k_error': result.params['k'].stderr}  # Storing the k value and its error
         x_range = np.linspace(subset['Time Value'].min(), subset['Time Value'].max(), 500)
-        plt.plot(x_range, first_order_kinetic_decay(x_range, *best_popt), color=colors[i])
+        plt.plot(x_range / 60, first_order_kinetic_decay(x_range, *best_popt), color=colors[i], linewidth=5)
 
-plt.title('Scatter Plot with First Order Kinetic Decay Fit for Each Agent Loading')
-plt.xlabel('time /' + data['Sample'][0].split('-')[-1])
-plt.ylabel('Si-H PV amplitude')
-# plt.legend()
+plt.xlabel('time (min)', fontsize=40)
+plt.ylabel('Si-H PV amplitude', fontsize=40)
+plt.xticks(np.arange(0, 26, 5), fontsize=20)
+plt.yticks(fontsize=20)
+plt.legend(fontsize=40)
+
+plt.show()
 
 # Print the fit equations and their statistics
 for stat in fit_statistics:
@@ -98,7 +106,7 @@ x_coordinates = np.arange(len(k_values))
 plt.bar(x_coordinates, [v['k'] for v in k_values.values()], color='#295695')
 plt.errorbar(x_coordinates, [v['k'] for v in k_values.values()], yerr=[v['k_error'] for v in k_values.values()], fmt='none', color='black', capsize=5)
 plt.xticks(x_coordinates, k_values.keys())
-plt.xlabel('Agent Loading (wt/wt)', fontsize=fontsize)
+plt.xlabel('agent loading (wt/wt)', fontsize=fontsize)
 plt.ylabel('k value', fontsize = fontsize)
 plt.xticks(fontsize=fontsize/2)
 plt.yticks(fontsize=fontsize/2)

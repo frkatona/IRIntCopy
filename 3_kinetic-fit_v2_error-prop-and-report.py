@@ -10,7 +10,7 @@ def first_order_kinetic_decay(x, A_0, k, C):
     return A_0 * np.exp(-k * x) + C
 
 # Load the CSV file
-import_path = Path(r'exports\CSV_exports\240226_1e-6_70W_kinetics_consolidated_PV-Amplitudes.csv')  
+import_path = Path(r'exports\CSV_exports\231208_4xCB-loading_KBrTransmission_ambient-cure_consolidated_PV-Amplitudes.csv')  
 data = pd.read_csv(import_path)
 
 # Preparing the scatter plot
@@ -37,7 +37,7 @@ for i, loading in enumerate(unique_loadings):
     # Normalize the data
     first_amplitude = subset['Amplitude'].iloc[0]
     subset['Amplitude'] = (subset['Amplitude'] - first_amplitude) / first_amplitude
-    sns.scatterplot(x=subset['Time Value'], y=subset['Amplitude'], color=colors[i], label=f'{loading}%', marker='o', s=100)
+    sns.scatterplot(x=subset['Time Value'], y=subset['Amplitude'], color=colors[i], label=f'{loading}%', marker='o', s=600)
 
     # Add error bars
     plt.errorbar(subset['Time Value'], subset['Amplitude'], yerr=subset['Amplitude Error'], fmt='none', color=colors[i])
@@ -66,14 +66,14 @@ for i, loading in enumerate(unique_loadings):
 
         # Plotting the best fit
         x_range = np.linspace(subset['Time Value'].min(), subset['Time Value'].max(), 500)
-        plt.plot(x_range, first_order_kinetic_decay(x_range, *best_popt), color=colors[i])
+        plt.plot(x_range, first_order_kinetic_decay(x_range, *best_popt), color=colors[i], linewidth=5)
 
 fontsize = 40
 
 # Scatter Plot with First Order Kinetic Decay Fit for Each Agent Loading
-plt.xlabel('time /s', fontsize=fontsize)
+plt.xlabel('time /h', fontsize=fontsize)
 plt.ylabel('Si-H PV amplitude', fontsize=fontsize)
-plt.xticks(fontsize=fontsize/2)
+plt.xticks(fontsize=30)
 plt.yticks([])
 # increase legend font size
 plt.legend(loc='best', fontsize=fontsize/2)

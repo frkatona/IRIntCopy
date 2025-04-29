@@ -98,8 +98,8 @@ def Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath):
     plt.xlabel('Wavenumber (cm-1)', fontsize=14)
     plt.ylabel('Absorbance', fontsize=14)
     plt.title('Pseudo-Voigt Fit', fontsize=16)
-    plt.legend()
-    plt.grid(True)
+    # plt.legend()
+    # plt.grid(True)
 
     # print("Fit Parameters: [A, mu, sigma, gamma, eta]")
     for key, value in fit_params_dict.items():
@@ -141,5 +141,5 @@ def Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath = r"exports\CSV_exports\240226_1e-6_70W_kinetics2_consolidated.csv"
+readpath = r"exports\CSV_exports\231208_4xCB-loading_KBrTransmission_ambient-cure_consolidated.csv"
 Fit_And_Plot_Pseudo_Voigt_And_A_Bar(readpath)

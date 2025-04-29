@@ -61,14 +61,15 @@ def SpectraCorrection(data):
         max_absorbance = corrected_absorbance[(data['cm-1'] >= start_wn) & (data['cm-1'] <= end_wn)].max()
         return corrected_absorbance / max_absorbance
 
-    wavenumbers = [1338, 1512, 1870, 2028, 2256, 2422, 2460, 2600, 2727, 3200, 3300, 3900, 4000]
+    # baseline_points = [1338, 1512, 1870, 2028, 2256, 2422, 2460, 2600, 2727, 3200, 3300, 3900, 4000] # original
+    baseline_points = [920, 1338, 1529, 2010, 2159, 2514, 3022, 4000] # attempt for shordisk samples
     
     # Apply baseline correction
-    baseline = CalculateBaseline(data, wavenumbers)
+    baseline = CalculateBaseline(data, baseline_points)
     corrected_absorbance = data.iloc[:,1] - baseline
 
     # Normalize the spectrum
-    normalized_corrected_absorbance = normalize_spectrum(data, corrected_absorbance, 1255, 1270)
+    normalized_corrected_absorbance = normalize_spectrum(data, corrected_absorbance, 1000, 1200)
 
     return normalized_corrected_absorbance, baseline
 
@@ -99,6 +100,8 @@ def Consolidate_And_Plot_Spectra(readpath):
         # 'legend.fontsize': 0,  # Effectively hides legends
         'xtick.direction': 'out',  # Outer ticks
         'ytick.direction': 'out',  # Outer ticks
+        # disable legend
+        'legend.fontsize': 0
     })
 
     # plot initialization
@@ -148,5 +151,6 @@ def Consolidate_And_Plot_Spectra(readpath):
 
 ##----------------------------MAIN CODE START----------------------------##
 
-readpath = r"CSVs\240226_1e-6_70W_kinetics2"
+readpath = r"C:\Users\antho\Downloads\IR-CSVs_CB-PDMS_ambient_variedTime"
 Consolidate_And_Plot_Spectra(readpath)
+

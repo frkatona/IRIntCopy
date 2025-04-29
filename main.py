@@ -16,7 +16,7 @@ conventions = {
         'no-agent': '#FFA500', # orange
         'na-0': '#FFA500', # orange
         'AuNP': '#FF0000', # red
-        ## blues for CB
+        ## blues for CB?
         'CB-0': '#FFA5F0', # oranger
         'CB-1e+1': '#9BA0D8', # lear
         'CB-1e-2': '#0773B1', # lear

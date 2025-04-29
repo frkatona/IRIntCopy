@@ -89,6 +89,7 @@
  - extract/export other information from broader peak integration
   - variance of the standard groups other than the one normalized to (to show it's much smaller than Si-H)
   - how exactly does the Si-O-Si peak change with CB loading or other cure conditions?  both intensity and shifting seem apparent
+  
 ### Graph formatting conditions (WiP):
 cure-condition
 - ambient
